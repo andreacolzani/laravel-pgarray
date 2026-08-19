@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace AndreaColzani\PgArray\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class PgArrayCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-pgarray';
 
     public $description = 'My command';
 
