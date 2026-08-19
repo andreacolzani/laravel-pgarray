@@ -2,9 +2,9 @@
 
 namespace AndreaColzani\PgArray\Tests;
 
+use AndreaColzani\PgArray\PgArrayServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use AndreaColzani\PgArray\PgArrayServiceProvider;
 
 class TestCase extends Orchestra
 {

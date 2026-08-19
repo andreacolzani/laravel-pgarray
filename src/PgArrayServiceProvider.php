@@ -2,9 +2,9 @@
 
 namespace AndreaColzani\PgArray;
 
+use AndreaColzani\PgArray\Commands\PgArrayCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use AndreaColzani\PgArray\Commands\PgArrayCommand;
 
 class PgArrayServiceProvider extends PackageServiceProvider
 {
