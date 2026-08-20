@@ -13,7 +13,11 @@ final class PgArrayValueCasterFactory
     {
         return match ($type) {
             PgArrayCast::Boolean => new BooleanCaster,
+            PgArrayCast::Decimal => new DecimalCaster,
+            PgArrayCast::Double => new DoubleCaster,
+            PgArrayCast::Float => new FloatCaster,
             PgArrayCast::Integer => new IntegerCaster,
+            PgArrayCast::Real => new RealCaster,
             PgArrayCast::String => new StringCaster,
             default => throw new LogicException(
                 "No value caster is registered for [{$type->value}].",

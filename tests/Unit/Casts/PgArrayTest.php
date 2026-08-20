@@ -53,6 +53,43 @@ it('casts a postgres boolean array to a php boolean array', function (): void {
     ))->toBe([true, false, true]);
 });
 
+it('casts floating point postgres arrays to php float arrays', function (
+    PgArrayCast $type,
+): void {
+    $cast = new PgArray(
+        type: $type,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(
+        new TestModel,
+        'values',
+        '{1.25,2.5,3.75}',
+        [],
+    ))->toBe([1.25, 2.5, 3.75]);
+})->with([
+    PgArrayCast::Float,
+    PgArrayCast::Double,
+    PgArrayCast::Real,
+]);
+
+it('casts a postgres decimal array to a php string array', function (): void {
+    $cast = new PgArray(
+        type: PgArrayCast::Decimal,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(
+        new TestModel,
+        'values',
+        '{123456789.123456789,0.000000001}',
+        [],
+    ))->toBe([
+        '123456789.123456789',
+        '0.000000001',
+    ]);
+});
+
 it('preserves multidimensional arrays', function (): void {
     $cast = new PgArray(
         type: PgArrayCast::Integer,
@@ -100,6 +137,23 @@ it('serializes a php integer array to postgres', function (): void {
         [1, 2, 3],
         [],
     ))->toBe('{1,2,3}');
+});
+
+it('serializes a php decimal array without losing precision', function (): void {
+    $cast = new PgArray(
+        type: PgArrayCast::Decimal,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->set(
+        new TestModel,
+        'values',
+        [
+            '123456789.123456789',
+            '0.000000001',
+        ],
+        [],
+    ))->toBe('{123456789.123456789,0.000000001}');
 });
 
 it('serializes a multidimensional php array to postgres', function (): void {
