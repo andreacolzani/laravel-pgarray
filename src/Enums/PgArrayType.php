@@ -4,24 +4,37 @@ namespace AndreaColzani\PgArray\Enums;
 
 enum PgArrayType: string
 {
-    case BigInt = 'bigint';
-    case Integer = 'integer';
-    case SmallInt = 'smallint';
+    case Char = 'char';
+    case Varchar = 'varchar';
+    case Text = 'text';
 
-    case Decimal = 'decimal';
-    case Numeric = 'numeric';
+    case SmallInt = 'smallint';
+    case Integer = 'integer';
+    case BigInt = 'bigint';
+
     case Real = 'real';
     case DoublePrecision = 'double precision';
+    case Decimal = 'decimal';
+    case Numeric = 'numeric';
 
     case Boolean = 'boolean';
 
-    case String = 'string';
-    case Stringable = 'stringable';
-    case Text = 'text';
-    case Varchar = 'varchar';
-    case Uuid = 'uuid';
-
     case Date = 'date';
+    case Time = 'time';
+    case TimeTz = 'timetz';
     case Timestamp = 'timestamp';
     case TimestampTz = 'timestamptz';
+
+    case Bytea = 'bytea';
+    case Uuid = 'uuid';
+    case Inet = 'inet';
+    case MacAddr = 'macaddr';
+
+    case Json = 'json';
+    case Jsonb = 'jsonb';
+
+    case Geometry = 'geometry';
+    case Geography = 'geography';
+
+    case Vector = 'vector';
 }

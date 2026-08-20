@@ -2,6 +2,7 @@
 
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\PgArray;
+use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayType;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 
@@ -22,7 +23,7 @@ it('creates a PgArray cast with the specified type', function () {
 });
 
 it('creates a typed cast definition', function () {
-    expect(AsPgArray::of(PgArrayType::Integer))
+    expect(AsPgArray::of(PgArrayCast::Integer))
         ->toBe(AsPgArray::class.':integer');
 });
 

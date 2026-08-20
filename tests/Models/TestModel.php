@@ -3,7 +3,7 @@
 namespace AndreaColzani\PgArray\Tests\Models;
 
 use AndreaColzani\PgArray\Casts\AsPgArray;
-use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Enums\PgArrayCast;
 use Illuminate\Database\Eloquent\Model;
 
 final class TestModel extends Model
@@ -12,7 +12,7 @@ final class TestModel extends Model
     {
         return [
             'tags' => AsPgArray::class,
-            'numbers' => AsPgArray::of(PgArrayType::Integer),
+            'numbers' => AsPgArray::of(PgArrayCast::Integer),
         ];
     }
 }
