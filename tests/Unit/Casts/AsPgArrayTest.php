@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\PgArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
-use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 
-it('creates a PgArray cast with the default string type', function () {
+it('creates a PgArray cast with the default string type and array container', function () {
     $cast = AsPgArray::castUsing([]);
 
     expect($cast)
@@ -15,20 +17,46 @@ it('creates a PgArray cast with the default string type', function () {
 
 it('creates a PgArray cast with the specified type', function () {
     $cast = AsPgArray::castUsing([
-        PgArrayType::Integer->value,
+        PgArrayCast::Integer->value,
     ]);
 
     expect($cast)
         ->toBeInstanceOf(PgArray::class);
 });
 
-it('creates a typed cast definition', function () {
+it('creates a PgArray cast with the specified container', function () {
+    $cast = AsPgArray::castUsing([
+        PgArrayCast::Integer->value,
+        PgArrayContainer::Collection->value,
+    ]);
+
+    expect($cast)
+        ->toBeInstanceOf(PgArray::class);
+});
+
+it('creates a typed array cast definition', function () {
     expect(AsPgArray::of(PgArrayCast::Integer))
-        ->toBe(AsPgArray::class.':integer');
+        ->toBe(AsPgArray::class.':integer,array');
+});
+
+it('creates a typed collection cast definition', function () {
+    expect(
+        AsPgArray::of(
+            PgArrayCast::Integer,
+            PgArrayContainer::Collection,
+        ),
+    )->toBe(AsPgArray::class.':integer,collection');
 });
 
 it('rejects an unsupported type', function () {
     AsPgArray::castUsing(['unsupported']);
+})->throws(ValueError::class);
+
+it('rejects an unsupported container', function () {
+    AsPgArray::castUsing([
+        PgArrayCast::Integer->value,
+        'unsupported',
+    ]);
 })->throws(ValueError::class);
 
 it('can be used as an Eloquent cast', function () {
@@ -37,11 +65,11 @@ it('can be used as an Eloquent cast', function () {
     expect($model->getCasts())
         ->toMatchArray([
             'tags' => AsPgArray::class,
-            'numbers' => AsPgArray::class.':integer',
+            'numbers' => AsPgArray::class.':integer,array',
         ]);
 });
 
-it('resolves the castable class', function () {
+it('resolves the castable classes', function () {
     $model = new TestModel;
 
     $casts = $model->getCasts();
@@ -49,5 +77,5 @@ it('resolves the castable class', function () {
     expect($casts['tags'])
         ->toBe(AsPgArray::class)
         ->and($casts['numbers'])
-        ->toBe(AsPgArray::class.':integer');
+        ->toBe(AsPgArray::class.':integer,array');
 });
