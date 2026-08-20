@@ -1,26 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray\Casts;
 
+use AndreaColzani\PgArray\Casts\Values\PgArrayValueCaster;
+use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Support\PgArrayParser;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
+/** @implements CastsAttributes<array<int, mixed>|Collection<int, mixed>|null, array<int, mixed>|Collection<int, mixed>> */
 final class PgArray implements CastsAttributes
 {
+    private readonly PgArrayValueCaster $caster;
+
     public function __construct(
-        private readonly PgArrayCast $type,
+        PgArrayCast $type,
         private readonly PgArrayContainer $container,
-    ) {}
+    ) {
+        $this->caster = PgArrayValueCasterFactory::make($type);
+    }
 
     public function get(
         Model $model,
         string $key,
         mixed $value,
         array $attributes,
-    ): mixed {
-        //
+    ): array|Collection|null {
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->toContainer(
+            $this->castFromDatabase(
+                PgArrayParser::parse($value),
+            ),
+        );
     }
 
     public function set(
@@ -28,7 +47,57 @@ final class PgArray implements CastsAttributes
         string $key,
         mixed $value,
         array $attributes,
-    ): mixed {
-        //
+    ): ?string {
+        if ($value === null) {
+            return null;
+        }
+
+        $values = $value instanceof Collection
+            ? $value->all()
+            : $value;
+
+        return PgArrayParser::serialize(
+            $this->castToDatabase($values),
+        );
+    }
+
+    /**
+     * @param  array<int, mixed>  $values
+     * @return array<int, mixed>
+     */
+    private function castFromDatabase(array $values): array
+    {
+        return array_map(
+            fn (mixed $value): mixed => is_array($value)
+                ? $this->castFromDatabase($value)
+                : $this->caster->get($value),
+            $values,
+        );
+    }
+
+    /**
+     * @param  array<int, mixed>  $values
+     * @return array<int, mixed>
+     */
+    private function castToDatabase(array $values): array
+    {
+        return array_map(
+            fn (mixed $value): mixed => is_array($value)
+                ? $this->castToDatabase($value)
+                : $this->caster->set($value),
+            $values,
+        );
+    }
+
+    /**
+     * @param  array<int, mixed>  $values
+     * @return array<int, mixed>|Collection<int, mixed>
+     */
+    private function toContainer(array $values): array|Collection
+    {
+        return match ($this->container) {
+            PgArrayContainer::Array => $values,
+            PgArrayContainer::Collection => new Collection($values),
+        };
     }
 }

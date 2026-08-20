@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class TestModel extends Model
 {
+    protected $fillable = ['numbers'];
+
     protected function casts(): array
     {
         return [

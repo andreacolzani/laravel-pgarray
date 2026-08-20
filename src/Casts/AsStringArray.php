@@ -4,15 +4,13 @@ namespace AndreaColzani\PgArray\Casts;
 
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
-use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 final class AsStringArray extends PgArrayCastable
 {
     /**
      * @param  array{0?: value-of<PgArrayContainer>}  $arguments
-     * @return CastsAttributes<list<mixed>, list<string>>
      */
-    public static function castUsing(array $arguments): CastsAttributes
+    public static function castUsing(array $arguments): PgArray
     {
         return new PgArray(
             type: PgArrayCast::String,

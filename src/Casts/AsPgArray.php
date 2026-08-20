@@ -5,7 +5,6 @@ namespace AndreaColzani\PgArray\Casts;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use Illuminate\Contracts\Database\Eloquent\Castable;
-use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 final class AsPgArray implements Castable
 {
@@ -14,7 +13,7 @@ final class AsPgArray implements Castable
      *
      * @param  array{0?: value-of<PgArrayCast>, 1?: value-of<PgArrayContainer>}  $arguments
      */
-    public static function castUsing(array $arguments): CastsAttributes
+    public static function castUsing(array $arguments): PgArray
     {
         $type = PgArrayCast::from(
             $arguments[0] ?? PgArrayCast::String->value,
