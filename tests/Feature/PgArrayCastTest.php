@@ -6,6 +6,7 @@ use AndreaColzani\PgArray\Tests\Models\TestModel;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Stringable;
 
 it('casts an attribute when retrieving it from an eloquent model', function (): void {
     $model = new TestModel;
@@ -205,4 +206,48 @@ it('supports a numeric concrete collection castable', function (): void {
             '123456789.123456789',
             '0.000000001',
         ]));
+});
+
+it('supports a stringable concrete castable', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'stringable_array' => '{foo,bar}',
+    ]);
+
+    expect($model->stringable_array[0])
+        ->toBeInstanceOf(Stringable::class)
+        ->and((string) $model->stringable_array[0])
+        ->toBe('foo')
+        ->and($model->stringable_array[1])
+        ->toBeInstanceOf(Stringable::class)
+        ->and((string) $model->stringable_array[1])
+        ->toBe('bar');
+});
+
+it('serializes a stringable concrete castable', function (): void {
+    $model = new TestModel;
+
+    $model->stringable_array = [
+        new Stringable('foo'),
+        'bar baz',
+    ];
+
+    expect($model->getAttributes()['stringable_array'])
+        ->toBe('{foo,"bar baz"}');
+});
+
+it('supports a stringable concrete collection castable', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'stringable_collection' => '{foo,bar}',
+    ]);
+
+    expect($model->stringable_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->and($model->stringable_collection->first())
+        ->toBeInstanceOf(Stringable::class)
+        ->and((string) $model->stringable_collection->first())
+        ->toBe('foo');
 });

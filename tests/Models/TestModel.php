@@ -14,6 +14,7 @@ use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
 use AndreaColzani\PgArray\Casts\AsIntegerArray;
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\AsRealArray;
+use AndreaColzani\PgArray\Casts\AsStringableArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,8 @@ final class TestModel extends Model
             'double_array' => AsDoubleArray::class,
             'float_array' => AsFloatArray::class,
             'real_array' => AsRealArray::class,
+            'stringable_array' => AsStringableArray::class,
+            'stringable_collection' => AsStringableArray::collect(),
             'date_array' => AsDateArray::class,
             'datetime_array' => AsDateTimeArray::class,
             'datetime_collection' => AsDateTimeArray::collect(),

@@ -12,6 +12,7 @@ use AndreaColzani\PgArray\Casts\AsImmutableDateArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
 use AndreaColzani\PgArray\Casts\AsIntegerArray;
 use AndreaColzani\PgArray\Casts\AsRealArray;
+use AndreaColzani\PgArray\Casts\AsStringableArray;
 use AndreaColzani\PgArray\Casts\AsStringArray;
 
 dataset('pg array castables', [
@@ -22,6 +23,7 @@ dataset('pg array castables', [
     AsIntegerArray::class,
     AsRealArray::class,
     AsStringArray::class,
+    AsStringableArray::class,
     AsDateArray::class,
     AsDateTimeArray::class,
     AsImmutableDateArray::class,

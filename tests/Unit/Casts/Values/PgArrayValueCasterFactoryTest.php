@@ -13,6 +13,7 @@ use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
+use AndreaColzani\PgArray\Casts\Values\StringableCaster;
 use AndreaColzani\PgArray\Casts\Values\StringCaster;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 
@@ -29,6 +30,11 @@ it('creates the integer caster', function (): void {
 it('creates the string caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::String))
         ->toBeInstanceOf(StringCaster::class);
+});
+
+it('creates the stringable caster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Stringable))
+        ->toBeInstanceOf(StringableCaster::class);
 });
 
 it('rejects an unimplemented caster', function (): void {
