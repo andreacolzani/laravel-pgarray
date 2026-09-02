@@ -19,6 +19,10 @@ final class PgArrayValueCasterFactory
             PgArrayCast::Integer => new IntegerCaster,
             PgArrayCast::Real => new RealCaster,
             PgArrayCast::String => new StringCaster,
+            PgArrayCast::Date => new DateCaster,
+            PgArrayCast::DateTime => new DateTimeCaster,
+            PgArrayCast::ImmutableDate => new ImmutableDateCaster,
+            PgArrayCast::ImmutableDateTime => new ImmutableDateTimeCaster,
             default => throw new LogicException(
                 "No value caster is registered for [{$type->value}].",
             ),

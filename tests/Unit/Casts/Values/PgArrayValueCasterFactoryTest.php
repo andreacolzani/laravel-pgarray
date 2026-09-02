@@ -3,9 +3,13 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\BooleanCaster;
+use AndreaColzani\PgArray\Casts\Values\DateCaster;
+use AndreaColzani\PgArray\Casts\Values\DateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
 use AndreaColzani\PgArray\Casts\Values\DoubleCaster;
 use AndreaColzani\PgArray\Casts\Values\FloatCaster;
+use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
+use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
@@ -28,7 +32,7 @@ it('creates the string caster', function (): void {
 });
 
 it('rejects an unimplemented caster', function (): void {
-    PgArrayValueCasterFactory::make(PgArrayCast::Date);
+    PgArrayValueCasterFactory::make(PgArrayCast::Ulid);
 })->throws(LogicException::class);
 
 it('creates the decimal caster', function (): void {
@@ -49,4 +53,24 @@ it('creates the float caster', function (): void {
 it('creates the real caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Real))
         ->toBeInstanceOf(RealCaster::class);
+});
+
+it('creates a DateCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Date))
+        ->toBeInstanceOf(DateCaster::class);
+});
+
+it('creates a DateTimeCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::DateTime))
+        ->toBeInstanceOf(DateTimeCaster::class);
+});
+
+it('creates an ImmutableDateCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::ImmutableDate))
+        ->toBeInstanceOf(ImmutableDateCaster::class);
+});
+
+it('creates an ImmutableDateTimeCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::ImmutableDateTime))
+        ->toBeInstanceOf(ImmutableDateTimeCaster::class);
 });

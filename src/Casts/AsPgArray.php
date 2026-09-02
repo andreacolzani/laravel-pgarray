@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray\Casts;
 
 use AndreaColzani\PgArray\Enums\PgArrayCast;

@@ -7,7 +7,7 @@ namespace AndreaColzani\PgArray\Casts;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 
-final class AsIntegerArray extends PgArrayCastable
+final class AsDateTimeArray extends PgArrayCastable
 {
     /**
      * @param  array{0?: value-of<PgArrayContainer>}  $arguments
@@ -15,7 +15,7 @@ final class AsIntegerArray extends PgArrayCastable
     public static function castUsing(array $arguments): PgArray
     {
         return new PgArray(
-            type: PgArrayCast::Integer,
+            type: PgArrayCast::DateTime,
             container: PgArrayContainer::from(
                 $arguments[0] ?? PgArrayContainer::Array->value,
             ),
