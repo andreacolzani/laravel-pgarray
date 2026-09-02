@@ -6,10 +6,14 @@ namespace AndreaColzani\PgArray\Tests\Models;
 
 use AndreaColzani\PgArray\Casts\AsDateArray;
 use AndreaColzani\PgArray\Casts\AsDateTimeArray;
+use AndreaColzani\PgArray\Casts\AsDecimalArray;
+use AndreaColzani\PgArray\Casts\AsDoubleArray;
+use AndreaColzani\PgArray\Casts\AsFloatArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
 use AndreaColzani\PgArray\Casts\AsIntegerArray;
 use AndreaColzani\PgArray\Casts\AsPgArray;
+use AndreaColzani\PgArray\Casts\AsRealArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +33,11 @@ final class TestModel extends Model
             ),
             'integer_array' => AsIntegerArray::class,
             'integer_collection' => AsIntegerArray::collect(),
+            'decimal_array' => AsDecimalArray::class,
+            'decimal_collection' => AsDecimalArray::collect(),
+            'double_array' => AsDoubleArray::class,
+            'float_array' => AsFloatArray::class,
+            'real_array' => AsRealArray::class,
             'date_array' => AsDateArray::class,
             'datetime_array' => AsDateTimeArray::class,
             'datetime_collection' => AsDateTimeArray::collect(),

@@ -150,3 +150,59 @@ it('supports a temporal concrete collection castable', function (): void {
         ->and($model->datetime_collection->first()->format('Y-m-d H:i:s.u'))
         ->toBe('2026-08-20 14:30:00.123456');
 });
+
+it('supports numeric concrete castables when retrieving attributes', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'decimal_array' => '{123456789.123456789,0.000000001}',
+        'double_array' => '{1.25,2.5}',
+        'float_array' => '{1.25,2.5}',
+        'real_array' => '{1.25,2.5}',
+    ]);
+
+    expect($model->decimal_array)
+        ->toBe(['123456789.123456789', '0.000000001'])
+        ->and($model->double_array)
+        ->toBe([1.25, 2.5])
+        ->and($model->float_array)
+        ->toBe([1.25, 2.5])
+        ->and($model->real_array)
+        ->toBe([1.25, 2.5]);
+});
+
+it('serializes numeric concrete castables when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->decimal_array = [
+        '123456789.123456789',
+        '0.000000001',
+    ];
+    $model->double_array = [1.25, 2.5];
+    $model->float_array = [1.25, 2.5];
+    $model->real_array = [1.25, 2.5];
+
+    expect($model->getAttributes()['decimal_array'])
+        ->toBe('{123456789.123456789,0.000000001}')
+        ->and($model->getAttributes()['double_array'])
+        ->toBe('{1.25,2.5}')
+        ->and($model->getAttributes()['float_array'])
+        ->toBe('{1.25,2.5}')
+        ->and($model->getAttributes()['real_array'])
+        ->toBe('{1.25,2.5}');
+});
+
+it('supports a numeric concrete collection castable', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'decimal_collection' => '{123456789.123456789,0.000000001}',
+    ]);
+
+    expect($model->decimal_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([
+            '123456789.123456789',
+            '0.000000001',
+        ]));
+});
