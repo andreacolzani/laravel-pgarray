@@ -24,6 +24,7 @@ final class PgArrayValueCasterFactory
             PgArrayCast::DateTime => new DateTimeCaster,
             PgArrayCast::ImmutableDate => new ImmutableDateCaster,
             PgArrayCast::ImmutableDateTime => new ImmutableDateTimeCaster,
+            PgArrayCast::Uri => new UriCaster,
             default => throw new LogicException(
                 "No value caster is registered for [{$type->value}].",
             ),

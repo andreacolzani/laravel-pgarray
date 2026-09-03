@@ -15,6 +15,7 @@ use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
 use AndreaColzani\PgArray\Casts\Values\StringableCaster;
 use AndreaColzani\PgArray\Casts\Values\StringCaster;
+use AndreaColzani\PgArray\Casts\Values\UriCaster;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 
 it('creates the boolean caster', function (): void {
@@ -79,4 +80,9 @@ it('creates an ImmutableDateCaster', function (): void {
 it('creates an ImmutableDateTimeCaster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::ImmutableDateTime))
         ->toBeInstanceOf(ImmutableDateTimeCaster::class);
+});
+
+it('creates a UriCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Uri))
+        ->toBeInstanceOf(UriCaster::class);
 });
