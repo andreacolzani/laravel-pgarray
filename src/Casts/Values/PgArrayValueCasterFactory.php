@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Enums\PgArrayCast;
-use LogicException;
 
 final class PgArrayValueCasterFactory
 {
@@ -25,9 +24,8 @@ final class PgArrayValueCasterFactory
             PgArrayCast::ImmutableDate => new ImmutableDateCaster,
             PgArrayCast::ImmutableDateTime => new ImmutableDateTimeCaster,
             PgArrayCast::Uri => new UriCaster,
-            default => throw new LogicException(
-                "No value caster is registered for [{$type->value}].",
-            ),
+            PgArrayCast::Uuid => new UuidCaster,
+            PgArrayCast::Ulid => new UlidCaster,
         };
     }
 }

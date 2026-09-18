@@ -15,6 +15,8 @@ use AndreaColzani\PgArray\Casts\AsIntegerArray;
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\AsRealArray;
 use AndreaColzani\PgArray\Casts\AsStringableArray;
+use AndreaColzani\PgArray\Casts\AsUlidArray;
+use AndreaColzani\PgArray\Casts\AsUuidArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use Illuminate\Database\Eloquent\Model;
@@ -46,6 +48,10 @@ final class TestModel extends Model
             'datetime_collection' => AsDateTimeArray::collect(),
             'immutable_date_array' => AsImmutableDateArray::class,
             'immutable_datetime_array' => AsImmutableDateTimeArray::class,
+            'uuid_array' => AsUuidArray::class,
+            'uuid_collection' => AsUuidArray::collect(),
+            'ulid_array' => AsUlidArray::class,
+            'ulid_collection' => AsUlidArray::collect(),
         ];
     }
 }

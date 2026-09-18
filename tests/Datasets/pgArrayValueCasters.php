@@ -14,6 +14,9 @@ use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
 use AndreaColzani\PgArray\Casts\Values\StringableCaster;
 use AndreaColzani\PgArray\Casts\Values\StringCaster;
+use AndreaColzani\PgArray\Casts\Values\UlidCaster;
+use AndreaColzani\PgArray\Casts\Values\UriCaster;
+use AndreaColzani\PgArray\Casts\Values\UuidCaster;
 
 dataset('pg array value casters', [
     BooleanCaster::class,
@@ -28,4 +31,7 @@ dataset('pg array value casters', [
     RealCaster::class,
     StringCaster::class,
     StringableCaster::class,
+    UriCaster::class,
+    UuidCaster::class,
+    UlidCaster::class,
 ]);

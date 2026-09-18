@@ -14,7 +14,9 @@ use AndreaColzani\PgArray\Casts\AsIntegerArray;
 use AndreaColzani\PgArray\Casts\AsRealArray;
 use AndreaColzani\PgArray\Casts\AsStringableArray;
 use AndreaColzani\PgArray\Casts\AsStringArray;
+use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUriArray;
+use AndreaColzani\PgArray\Casts\AsUuidArray;
 
 dataset('pg array castables', [
     AsBooleanArray::class,
@@ -30,4 +32,6 @@ dataset('pg array castables', [
     AsImmutableDateArray::class,
     AsImmutableDateTimeArray::class,
     AsUriArray::class,
+    AsUlidArray::class,
+    AsUuidArray::class,
 ]);

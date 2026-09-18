@@ -15,7 +15,9 @@ use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
 use AndreaColzani\PgArray\Casts\Values\StringableCaster;
 use AndreaColzani\PgArray\Casts\Values\StringCaster;
+use AndreaColzani\PgArray\Casts\Values\UlidCaster;
 use AndreaColzani\PgArray\Casts\Values\UriCaster;
+use AndreaColzani\PgArray\Casts\Values\UuidCaster;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 
 it('creates the boolean caster', function (): void {
@@ -37,10 +39,6 @@ it('creates the stringable caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Stringable))
         ->toBeInstanceOf(StringableCaster::class);
 });
-
-it('rejects an unimplemented caster', function (): void {
-    PgArrayValueCasterFactory::make(PgArrayCast::Ulid);
-})->throws(LogicException::class);
 
 it('creates the decimal caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Decimal))
@@ -85,4 +83,14 @@ it('creates an ImmutableDateTimeCaster', function (): void {
 it('creates a UriCaster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Uri))
         ->toBeInstanceOf(UriCaster::class);
+});
+
+it('creates a UuidCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Uuid))
+        ->toBeInstanceOf(UuidCaster::class);
+});
+
+it('creates an UlidCaster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Ulid))
+        ->toBeInstanceOf(UlidCaster::class);
 });

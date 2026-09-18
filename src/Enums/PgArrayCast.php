@@ -21,5 +21,6 @@ enum PgArrayCast: string
     case Stringable = 'stringable';
 
     case Uri = 'uri';
+    case Uuid = 'uuid';
     case Ulid = 'ulid';
 }
