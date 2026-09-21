@@ -25,8 +25,6 @@ final class UriCaster implements PgArrayValueCaster
             return null;
         }
 
-        return $value instanceof Uri
-            ? $value->toString()
-            : (string) $value;
+        return (string) $value;
     }
 }
