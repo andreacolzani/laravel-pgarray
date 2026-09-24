@@ -19,6 +19,8 @@ use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUuidArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use Illuminate\Database\Eloquent\Model;
 
 final class TestModel extends Model
@@ -52,6 +54,12 @@ final class TestModel extends Model
             'uuid_collection' => AsUuidArray::collect(),
             'ulid_array' => AsUlidArray::class,
             'ulid_collection' => AsUlidArray::collect(),
+            'statuses' => AsPgArray::of(Status::class),
+            'status_collection' => AsPgArray::of(
+                Status::class,
+                PgArrayContainer::Collection,
+            ),
+            'priorities' => AsPgArray::of(Priority::class),
         ];
     }
 }

@@ -41,6 +41,7 @@ Alla fine dell'ultima fase di sviluppo:
 - `PgArrayCastable` implementato (con `collect()` centralizzato)
 - `AsPgArray::of(PgArrayCast|class-string)` generalizzato (Milestone 2)
 - `PgArrayValueCasterResolver` + `PgArrayElementDefinition` + `UnsupportedElementException` (Milestone 3)
+- `EnumCaster`: supporto automatico ai `BackedEnum` (string/int) via `AsPgArray::of(Status::class)`; pure enum rifiutati con `UnsupportedElementException::pureEnum()` (Milestone 4)
 - castable specifici implementati per: Boolean, Integer, String, Decimal, Float, Double, Real, Stringable, Date, DateTime, ImmutableDate, ImmutableDateTime, Uri, Ulid, Uuid
 - container `array` e `Collection` supportati
 - gestione `null` implementata
@@ -574,7 +575,8 @@ PgArrayElementDefinition (PgArrayCast|class-string)
    ↓
 PgArrayValueCasterResolver
    ├── PgArrayCast  → PgArrayValueCasterFactory → specific caster
-   └── class-string → (Milestone 4/5) — per ora UnsupportedElementException
+   └── class-string → BackedEnum → EnumCaster (Milestone 4)
+                      altri       → UnsupportedElementException (PgArrayValue: Milestone 5)
 ```
 
 Interfaccia concettuale:
@@ -616,7 +618,9 @@ UuidCaster
 
 > **Design decision:** `Char`, `Varchar`, `Text`, `Time`, `TimeTz` PostgreSQL types mappano tutti a `StringCaster` (nessuna classe separata). `Json`/`Jsonb` non hanno value casters (vedi Milestone 6).
 
-Tutti i test attuali sono green (207 test, PHPStan pulito, Pint pulito).
+`EnumCaster` (Milestone 4) non è mappato da `PgArrayCast`: viene istanziato dal resolver con la classe dell'enum come argomento.
+
+Tutti i test attuali sono green (264 test, PHPStan pulito, Pint pulito).
 
 ---
 
@@ -2039,6 +2043,6 @@ Quando riprenderemo il progetto in una nuova conversazione, mantenere queste reg
 
 Il prossimo punto naturale da cui ripartire è:
 
-> **Tutti i Laravel value casts e castability sono completati** (Boolean, Integer, String, Decimal, Double, Float, Real, Date, DateTime, ImmutableDate, ImmutableDateTime, Stringable, Uri, Ulid, Uuid). I prossimi step architetturali sono quelli descritti in ROADMAP.md Milestones 3-6: element caster resolver (Milestone 3), automatic `BackedEnum` support (Milestone 4), `PgArrayValue` contract (Milestone 5), and JSON/JSONB object serialization (Milestone 6). ROADMAP.md remains the source of truth for expected behavior and next milestones.
+> **Tutti i Laravel value casts e castability sono completati** (Boolean, Integer, String, Decimal, Double, Float, Real, Date, DateTime, ImmutableDate, ImmutableDateTime, Stringable, Uri, Ulid, Uuid). I prossimi step architetturali sono quelli descritti in ROADMAP.md Milestones 3-6: element caster resolver (Milestone 3, done), automatic `BackedEnum` support (Milestone 4, done), `PgArrayValue` contract (Milestone 5, next), and JSON/JSONB object serialization (Milestone 6). ROADMAP.md remains the source of truth for expected behavior and next milestones.
 
 Questo documento descrive l'architettura e le decisioni prese finora; **le classi presenti nel repository/worktree dell'utente restano la source of truth per l'implementazione effettiva**.

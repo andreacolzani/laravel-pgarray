@@ -181,7 +181,7 @@ Do not add serializer configuration until it is actually needed.
 ### 3.2 `PgArrayValueCasterResolver`
 
 - [x] Resolve built-in `PgArrayCast` values.
-- [x] Resolve class-string element types (routing only: unknown classes, `BackedEnum` until Milestone 4, and other classes fail with `UnsupportedElementException`).
+- [x] Resolve class-string element types (unknown classes, pure enums and other unsupported classes fail with `UnsupportedElementException`; `BackedEnum` resolves to `EnumCaster` since Milestone 4).
 - [x] Produce explicit exceptions for unsupported types.
 
 ### 3.3 Refactor factory
@@ -215,7 +215,7 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 4 — Automatic `BackedEnum` support
+## Milestone 4 — Automatic `BackedEnum` support [DONE]
 
 Support:
 
@@ -245,15 +245,15 @@ Expected round-trip:
 
 ### Tasks
 
-- [ ] Implement `EnumCaster`.
-- [ ] Support string-backed enums.
-- [ ] Support int-backed enums.
-- [ ] Handle invalid backing values explicitly.
-- [ ] Keep `UnitEnum` unsupported automatically unless a future explicit representation is designed.
-- [ ] Test hydration.
-- [ ] Test serialization.
-- [ ] Test multidimensional arrays.
-- [ ] Test Collection containers.
+- [x] Implement `EnumCaster` (resolved by `PgArrayValueCasterResolver` for `BackedEnum` class-strings).
+- [x] Support string-backed enums.
+- [x] Support int-backed enums (PostgreSQL integer text such as `"1"` is validated with `FILTER_VALIDATE_INT`).
+- [x] Handle invalid backing values explicitly (`UnexpectedValueException` on both `get()` and `set()`; `set()` accepts enum cases or valid raw backing values, cases of a different enum are rejected).
+- [x] Keep `UnitEnum` unsupported (`UnsupportedElementException::pureEnum()`).
+- [x] Test hydration.
+- [x] Test serialization.
+- [x] Test multidimensional arrays.
+- [x] Test Collection containers.
 
 ### Checkpoint
 

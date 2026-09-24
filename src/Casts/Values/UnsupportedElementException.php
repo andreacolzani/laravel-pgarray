@@ -19,10 +19,10 @@ final class UnsupportedElementException extends InvalidArgumentException
         );
     }
 
-    public static function notYetSupported(string $type): self
+    public static function pureEnum(string $type): self
     {
         return new self(
-            "Element type [{$type}] is not supported yet.",
+            "Pure enum [{$type}] is not supported. Use a backed enum instead.",
         );
     }
 

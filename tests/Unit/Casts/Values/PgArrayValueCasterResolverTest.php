@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayElementDefinition;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
+use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
+use AndreaColzani\PgArray\Tests\Fixtures\Suit;
 
 it('resolves a built-in cast to the factory caster', function (PgArrayCast $type): void {
     expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($type)))
@@ -27,11 +30,16 @@ it('rejects an unknown class string', function (): void {
     'Unknown element type [App\\Missing\\Element]',
 );
 
-it('rejects a backed enum class string until enums are supported', function (): void {
-    PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(Status::class));
+it('resolves a backed enum class string to the enum caster', function (string $enum): void {
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($enum)))
+        ->toBeInstanceOf(EnumCaster::class);
+})->with([Status::class, Priority::class]);
+
+it('rejects a pure enum class string', function (): void {
+    PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(Suit::class));
 })->throws(
     UnsupportedElementException::class,
-    'Element type ['.Status::class.'] is not supported yet.',
+    'Pure enum ['.Suit::class.'] is not supported. Use a backed enum instead.',
 );
 
 it('rejects an unsupported class string', function (): void {

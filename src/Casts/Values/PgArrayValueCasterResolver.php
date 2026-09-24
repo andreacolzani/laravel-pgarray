@@ -6,18 +6,20 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use BackedEnum;
+use UnitEnum;
 
 /**
  * Resolution layer between PgArray and individual value casters.
  *
  *   Resolver
  *    ├── PgArrayCast  →  PgArrayValueCasterFactory
- *    └── class-string →  Enum/Object/etc.
+ *    └── class-string →  EnumCaster (BackedEnum) / Object/etc.
  *
  * Built-in PgArrayCast values are delegated to PgArrayValueCasterFactory,
- * keeping that factory focused on built-in casters. Class-string casters
- * for enums (Milestone 4) and PgArrayValue objects (Milestone 5) will be
- * added in subsequent milestones.
+ * keeping that factory focused on built-in casters. BackedEnum class-strings
+ * resolve to EnumCaster; pure (UnitEnum) enums have no storable representation
+ * and are rejected explicitly. PgArrayValue objects (Milestone 5) will be
+ * added in a subsequent milestone.
  */
 final class PgArrayValueCasterResolver
 {
@@ -42,7 +44,11 @@ final class PgArrayValueCasterResolver
         }
 
         if (is_subclass_of($type, BackedEnum::class)) {
-            throw UnsupportedElementException::notYetSupported($type);
+            return new EnumCaster($type);
+        }
+
+        if (is_subclass_of($type, UnitEnum::class)) {
+            throw UnsupportedElementException::pureEnum($type);
         }
 
         throw UnsupportedElementException::unsupportedClass($type);

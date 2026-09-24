@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -250,4 +252,48 @@ it('supports a stringable concrete collection castable', function (): void {
         ->toBeInstanceOf(Stringable::class)
         ->and((string) $model->stringable_collection->first())
         ->toBe('foo');
+});
+
+it('supports backed enum element types when retrieving attributes', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'statuses' => '{active,inactive}',
+        'priorities' => '{3,1}',
+    ]);
+
+    expect($model->statuses)
+        ->toBe([Status::Active, Status::Inactive])
+        ->and($model->priorities)
+        ->toBe([Priority::High, Priority::Low]);
+});
+
+it('serializes backed enum element types when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->statuses = [Status::Active, Status::Inactive];
+    $model->priorities = [Priority::High, Priority::Low];
+
+    expect($model->getAttributes()['statuses'])
+        ->toBe('{active,inactive}')
+        ->and($model->getAttributes()['priorities'])
+        ->toBe('{3,1}');
+});
+
+it('supports a backed enum collection', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'status_collection' => '{inactive,active}',
+    ]);
+
+    expect($model->status_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->and($model->status_collection->all())
+        ->toBe([Status::Inactive, Status::Active]);
+
+    $model->status_collection = collect([Status::Active]);
+
+    expect($model->getAttributes()['status_collection'])
+        ->toBe('{active}');
 });

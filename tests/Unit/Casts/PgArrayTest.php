@@ -6,6 +6,8 @@ use AndreaColzani\PgArray\Casts\PgArray;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 use Illuminate\Support\Collection;
 
@@ -247,3 +249,90 @@ it('fails explicitly when the element type cannot be resolved', function (): voi
         container: PgArrayContainer::Array,
     );
 })->throws(UnsupportedElementException::class);
+
+it('casts a postgres array to backed enum cases', function (): void {
+    $cast = new PgArray(
+        type: Status::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(
+        new TestModel,
+        'statuses',
+        '{active,inactive}',
+        [],
+    ))->toBe([Status::Active, Status::Inactive]);
+});
+
+it('serializes backed enum cases to postgres', function (): void {
+    $cast = new PgArray(
+        type: Status::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->set(
+        new TestModel,
+        'statuses',
+        [Status::Active, Status::Inactive],
+        [],
+    ))->toBe('{active,inactive}');
+});
+
+it('round-trips int-backed enum cases', function (): void {
+    $cast = new PgArray(
+        type: Priority::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(new TestModel, 'priorities', '{1,3}', []))
+        ->toBe([Priority::Low, Priority::High])
+        ->and($cast->set(new TestModel, 'priorities', [Priority::Low, Priority::High], []))
+        ->toBe('{1,3}');
+});
+
+it('preserves multidimensional backed enum arrays', function (): void {
+    $cast = new PgArray(
+        type: Status::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(
+        new TestModel,
+        'statuses',
+        '{{active,inactive},{inactive,NULL}}',
+        [],
+    ))->toBe([
+        [Status::Active, Status::Inactive],
+        [Status::Inactive, null],
+    ])->and($cast->set(
+        new TestModel,
+        'statuses',
+        [[Status::Active, Status::Inactive], [Status::Inactive, null]],
+        [],
+    ))->toBe('{{active,inactive},{inactive,NULL}}');
+});
+
+it('returns a collection of backed enum cases', function (): void {
+    $cast = new PgArray(
+        type: Status::class,
+        container: PgArrayContainer::Collection,
+    );
+
+    $result = $cast->get(new TestModel, 'statuses', '{active,inactive}', []);
+
+    expect($result)
+        ->toBeInstanceOf(Collection::class)
+        ->and($result->all())
+        ->toBe([Status::Active, Status::Inactive])
+        ->and($cast->set(new TestModel, 'statuses', collect([Status::Inactive]), []))
+        ->toBe('{inactive}');
+});
+
+it('fails explicitly on invalid backed enum values', function (): void {
+    $cast = new PgArray(
+        type: Status::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $cast->get(new TestModel, 'statuses', '{active,archived}', []);
+})->throws(UnexpectedValueException::class);
