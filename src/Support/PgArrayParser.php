@@ -200,7 +200,7 @@ final class PgArrayParser
         }
 
         if (strcasecmp($value, 'NULL') === 0) {
-            return '"NULL"';
+            return '"'.$value.'"';
         }
 
         return $value;

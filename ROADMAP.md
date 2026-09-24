@@ -318,7 +318,7 @@ final class Address implements PgArrayValue
 - [x] Test multidimensional arrays.
 
 > **Design decisions:**
-> - Until Milestone 6, `toPgArrayValue()` may only return scalar values (`string|int|float|bool`) or `null`. Arrays/objects (such as the `Address` example above) fail with an explicit `UnexpectedValueException`: without JSON encoding, `PgArrayParser::serialize()` would read them as an extra array dimension. Milestone 6 lifts this restriction without changing the contract.
+> - For plain `PgArrayValue` implementations, `toPgArrayValue()` may only return scalar values (`string|int|float|bool`) or `null`. Arrays/objects fail with an explicit `UnexpectedValueException` pointing to `PgArrayJsonValue`: without JSON encoding, `PgArrayParser::serialize()` would read them as an extra array dimension. Milestone 6 lifts this restriction through the `PgArrayJsonValue` marker contract, without changing `PgArrayValue`.
 > - On `set()`, raw values that are not instances of the class are normalized through `fromPgArrayValue()` → `toPgArrayValue()` (as `EnumCaster` does with raw backing values), so the class can validate them. Objects of other classes are rejected.
 > - `fromPgArrayValue()` receives the PostgreSQL text representation of the element and is never called with `null`.
 > - A `BackedEnum` that implements `PgArrayValue` is resolved through the contract (`ObjectCaster`), which takes precedence over automatic enum support.
@@ -329,7 +329,7 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 6 — JSON / JSONB object serialization
+## Milestone 6 — JSON / JSONB object serialization [DONE]
 
 Connect custom objects to PostgreSQL `json[]` / `jsonb[]`.
 
@@ -351,16 +351,44 @@ Remember that PostgreSQL `json[]` / `jsonb[]` is an array whose individual eleme
 
 ### Tasks
 
-- [ ] Implement/verify `JsonCaster`.
-- [ ] Implement/verify `JsonbCaster`.
-- [ ] Define object → JSON behavior.
-- [ ] Define JSON → object behavior.
-- [ ] Preserve nested structures.
-- [ ] Test `Address[]`.
-- [ ] Test `Address[][]`.
-- [ ] Test `null` values.
-- [ ] Test JSON edge cases.
-- [ ] Test full Eloquent round-trip.
+- [x] Implement the JSON element caster (`JsonObjectCaster`, shared by `json[]` and `jsonb[]`).
+- [x] Define object → JSON behavior (`PgArrayJsonValue` marker contract).
+- [x] Define JSON → object behavior.
+- [x] Provide a default, overridable serialization (`Concerns\InteractsWithPgArrayJson`).
+- [x] Preserve nested structures.
+- [x] Test `Address[]`.
+- [x] Test `Address[][]`.
+- [x] Test `null` values.
+- [x] Test JSON edge cases.
+- [x] Test full Eloquent round-trip.
+
+Usage:
+
+```php
+final class Address implements PgArrayJsonValue
+{
+    use InteractsWithPgArrayJson; // optional default implementation
+
+    public function __construct(
+        public readonly string $street,
+        public readonly string $city,
+    ) {}
+}
+
+'addresses' => AsPgArray::of(Address::class), // json[] / jsonb[] column
+```
+
+> **Design decisions:**
+> - JSON storage is declared at class level through the marker contract `PgArrayJsonValue extends PgArrayValue`, not detected from the value: when reading, an element such as `"123"` or `"true"` is ambiguous (plain text for `Email`/`Cents`, JSON for `Address`). The cast definition stays `AsPgArray::of(Address::class)`.
+> - The resolver checks `PgArrayJsonValue` before `PgArrayValue`: JSON implementations resolve to `JsonObjectCaster`, the others keep using `ObjectCaster` (scalar logical values only).
+> - `json[]` and `jsonb[]` are identical on the PHP side, so a single `JsonObjectCaster` serves both; no separate `JsonCaster` / `JsonbCaster` classes.
+> - No raw JSON cast (e.g. `PgArrayCast::Json` returning associative arrays): it would add little over Laravel's native `json`/`array` casts, and PHP list arrays would be ambiguous with PostgreSQL array dimensions. Scope is limited to `PgArrayJsonValue` objects.
+> - Encoding uses `JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION`; decoding uses associative arrays and `JSON_THROW_ON_ERROR`. Invalid JSON fails with `JsonException`.
+> - SQL `NULL` elements, JSON `null` elements and `null` logical values are all treated as `null`; `fromPgArrayValue()` is never called with `null`.
+> - On `set()`, raw JSON strings are normalized through `fromPgArrayValue()` → `toPgArrayValue()` (consistent with `ObjectCaster`); other raw scalars and objects of other classes are rejected. Raw PHP arrays are not accepted as elements, because `PgArray` treats them as array dimensions.
+> - `InteractsWithPgArrayJson` is optional. By default `toPgArrayValue()` returns the object's properties by name (nested `PgArrayValue` objects through their own contract) and `fromPgArrayValue()` passes matching keys to the constructor as named arguments, restoring nested `PgArrayValue` objects and backed enums from the parameter type. Unknown keys are ignored; missing required arguments fail. Classes override either method to change or limit the stored structure.
+> - `PgArrayParser::serialize()` now preserves the case of string elements equal to `NULL` (e.g. `null` was stored as `"NULL"`).
+> - `tests/Fixtures` is included in the PHPStan paths, so the trait is analysed through the classes that use it.
 
 ### Checkpoint
 

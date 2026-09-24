@@ -19,6 +19,8 @@ use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUuidArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Tests\Fixtures\Address;
+use AndreaColzani\PgArray\Tests\Fixtures\Contact;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
@@ -66,6 +68,12 @@ final class TestModel extends Model
                 Email::class,
                 PgArrayContainer::Collection,
             ),
+            'addresses' => AsPgArray::of(Address::class),
+            'address_collection' => AsPgArray::of(
+                Address::class,
+                PgArrayContainer::Collection,
+            ),
+            'contacts' => AsPgArray::of(Contact::class),
         ];
     }
 }

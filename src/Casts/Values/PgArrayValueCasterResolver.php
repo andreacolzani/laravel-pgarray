@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use BackedEnum;
@@ -14,11 +15,13 @@ use UnitEnum;
  *
  *   Resolver
  *    ├── PgArrayCast  →  PgArrayValueCasterFactory
- *    └── class-string →  ObjectCaster (PgArrayValue) / EnumCaster (BackedEnum)
+ *    └── class-string →  JsonObjectCaster (PgArrayJsonValue) / ObjectCaster (PgArrayValue)
+ *                        / EnumCaster (BackedEnum)
  *
  * Built-in PgArrayCast values are delegated to PgArrayValueCasterFactory,
- * keeping that factory focused on built-in casters. PgArrayValue
- * implementations resolve to ObjectCaster and take precedence over the
+ * keeping that factory focused on built-in casters. PgArrayJsonValue
+ * implementations resolve to JsonObjectCaster, other PgArrayValue
+ * implementations resolve to ObjectCaster. Both take precedence over the
  * automatic BackedEnum support, since implementing the contract is an explicit
  * choice. BackedEnum class-strings resolve to EnumCaster; pure (UnitEnum)
  * enums have no storable representation and are rejected explicitly.
@@ -43,6 +46,10 @@ final class PgArrayValueCasterResolver
     {
         if (! class_exists($type)) {
             throw UnsupportedElementException::unknownClass($type);
+        }
+
+        if (is_subclass_of($type, PgArrayJsonValue::class)) {
+            return new JsonObjectCaster($type);
         }
 
         if (is_subclass_of($type, PgArrayValue::class)) {

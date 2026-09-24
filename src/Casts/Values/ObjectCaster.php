@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
 use UnexpectedValueException;
 
@@ -12,6 +13,8 @@ use UnexpectedValueException;
  *
  *   DB  → fromPgArrayValue()
  *   PHP → toPgArrayValue() (scalar logical value)
+ *
+ * Structured logical values require PgArrayJsonValue (see JsonObjectCaster).
  *
  * On set(), raw values that are not yet instances of the class are normalized
  * through fromPgArrayValue() first, so the class can validate them. Objects of
@@ -67,9 +70,10 @@ final class ObjectCaster implements PgArrayValueCaster
         }
 
         throw new UnexpectedValueException(sprintf(
-            '[%s]::toPgArrayValue() must return a scalar value or null, [%s] given.',
+            '[%s]::toPgArrayValue() must return a scalar value or null, [%s] given. Implement [%s] to store structured values as JSON.',
             $object::class,
             get_debug_type($value),
+            PgArrayJsonValue::class,
         ));
     }
 }

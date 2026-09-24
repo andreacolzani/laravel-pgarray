@@ -6,8 +6,10 @@ use AndreaColzani\PgArray\Casts\PgArray;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Cents;
 use AndreaColzani\PgArray\Tests\Fixtures\Color;
+use AndreaColzani\PgArray\Tests\Fixtures\Contact;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
@@ -423,3 +425,121 @@ it('prefers the PgArrayValue contract over automatic backed enum support', funct
         ->and($cast->get(new TestModel, 'colors', '{RED,GREEN}', []))
         ->toBe([Color::Red, Color::Green]);
 });
+
+it('casts a postgres json array to PgArrayJsonValue objects', function (): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $result = $cast->get(
+        new TestModel,
+        'addresses',
+        '{"{\"city\": \"Milano\", \"street\": \"Via Roma 1\"}",NULL,"{\"city\": \"Roma\", \"street\": \"Via Po 2\"}"}',
+        [],
+    );
+
+    expect($result)->toEqual([
+        new Address('Via Roma 1', 'Milano'),
+        null,
+        new Address('Via Po 2', 'Roma'),
+    ]);
+});
+
+it('serializes PgArrayJsonValue objects to a postgres json array', function (): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->set(
+        new TestModel,
+        'addresses',
+        [new Address('Via Roma 1', 'Milano'), null],
+        [],
+    ))->toBe('{"{\"street\":\"Via Roma 1\",\"city\":\"Milano\"}",NULL}');
+});
+
+it('round-trips multidimensional PgArrayJsonValue arrays', function (): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $values = [
+        [new Address('Via Roma 1', 'Milano'), new Address('Via Po 2', 'Roma')],
+        [null, new Address('Via Dante 3', 'Torino')],
+    ];
+
+    $serialized = $cast->set(new TestModel, 'addresses', $values, []);
+
+    expect($serialized)
+        ->toStartWith('{{"{\"street\":\"Via Roma 1\"')
+        ->and($cast->get(new TestModel, 'addresses', $serialized, []))
+        ->toEqual($values);
+});
+
+it('returns a collection of PgArrayJsonValue objects', function (): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Collection,
+    );
+
+    $values = collect([new Address('Via Roma 1', 'Milano')]);
+
+    expect($cast->get(new TestModel, 'addresses', $cast->set(new TestModel, 'addresses', $values, []), []))
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual($values);
+});
+
+it('round-trips JSON edge cases', function (Address $address): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(new TestModel, 'addresses', $cast->set(new TestModel, 'addresses', [$address], []), []))
+        ->toEqual([$address]);
+})->with([
+    'quotes' => [new Address('Via "Roma"', 'Milano')],
+    'backslashes' => [new Address('C:\\Via\\Roma', 'Milano\\')],
+    'array delimiters' => [new Address('{Via, Roma}', 'Milano,Roma')],
+    'empty strings' => [new Address('', '')],
+    'unicode' => [new Address('Straße', 'Forlì 🍕')],
+    'null literal' => [new Address('null', 'NULL')],
+    'whitespace' => [new Address("Via\tRoma\n1", ' Milano ')],
+]);
+
+it('preserves nested structures of PgArrayJsonValue objects', function (): void {
+    $cast = new PgArray(
+        type: Contact::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $values = [
+        new Contact('John', ['+39 02 1234'], Priority::High, new Address('Via Roma 1', 'Milano')),
+        new Contact('Jane'),
+    ];
+
+    expect($cast->get(new TestModel, 'contacts', $cast->set(new TestModel, 'contacts', $values, []), []))
+        ->toEqual($values);
+});
+
+it('treats JSON null elements as null', function (): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->get(new TestModel, 'addresses', '{null,NULL}', []))
+        ->toBe([null, null]);
+});
+
+it('fails explicitly on invalid JSON elements', function (): void {
+    $cast = new PgArray(
+        type: Address::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $cast->get(new TestModel, 'addresses', '{"{\"street\":"}', []);
+})->throws(JsonException::class);

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
+use AndreaColzani\PgArray\Casts\Values\JsonObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\ObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayElementDefinition;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
+use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Color;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
@@ -41,6 +43,11 @@ it('resolves a backed enum class string to the enum caster', function (string $e
 it('resolves a PgArrayValue class string to the object caster', function (): void {
     expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(Email::class)))
         ->toBeInstanceOf(ObjectCaster::class);
+});
+
+it('resolves a PgArrayJsonValue class string to the JSON object caster', function (): void {
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(Address::class)))
+        ->toBeInstanceOf(JsonObjectCaster::class);
 });
 
 it('prefers the PgArrayValue contract over backed enum support', function (): void {

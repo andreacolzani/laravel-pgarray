@@ -73,6 +73,11 @@ describe('serialize', function () {
             ->toBe('{foo,NULL,bar}');
     });
 
+    it('quotes the string NULL preserving its case', function () {
+        expect(PgArrayParser::serialize(['NULL', 'null', 'Null']))
+            ->toBe('{"NULL","null","Null"}');
+    });
+
     it('quotes values when required', function () {
         expect(PgArrayParser::serialize(['foo,bar', 'baz']))
             ->toBe('{"foo,bar",baz}');
@@ -104,6 +109,7 @@ it('round trips parsed values', function (string $postgres, array $expected) {
     ['{}', []],
     ['{foo,bar}', ['foo', 'bar']],
     ['{NULL,"NULL"}', [null, 'NULL']],
+    ['{NULL,"null"}', [null, 'null']],
     ['{"foo,bar","baz"}', ['foo,bar', 'baz']],
     ['{{foo,bar},{baz,qux}}', [
         ['foo', 'bar'],

@@ -16,9 +16,9 @@ namespace AndreaColzani\PgArray\Contracts;
  *
  * toPgArrayValue() returns a logical PHP value, never an already-encoded
  * PostgreSQL string: escaping and quoting are handled by the package. Only
- * scalar logical values (string|int|float|bool) or null are currently
- * supported; structured values will be supported by JSON / JSONB element
- * serialization.
+ * scalar logical values (string|int|float|bool) or null are supported;
+ * implement PgArrayJsonValue to store structured values in json[] / jsonb[]
+ * columns.
  *
  * fromPgArrayValue() receives the element as read from the database (the
  * PostgreSQL text representation) or, when assigning, a raw value that is

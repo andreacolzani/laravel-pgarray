@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Tests\Fixtures\Address;
+use AndreaColzani\PgArray\Tests\Fixtures\Contact;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
@@ -340,4 +342,58 @@ it('supports a PgArrayValue collection', function (): void {
 
     expect($model->getAttributes()['email_collection'])
         ->toBe('{jane@example.com}');
+});
+
+it('supports PgArrayJsonValue element types when retrieving attributes', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'addresses' => '{"{\"city\": \"Milano\", \"street\": \"Via Roma 1\"}",NULL}',
+    ]);
+
+    expect($model->addresses)
+        ->toEqual([new Address('Via Roma 1', 'Milano'), null]);
+});
+
+it('serializes PgArrayJsonValue element types when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->addresses = [
+        new Address('Via Roma 1', 'Milano'),
+        '{"city": "Roma", "street": "Via Po 2"}',
+    ];
+
+    expect($model->getAttributes()['addresses'])
+        ->toBe('{"{\"street\":\"Via Roma 1\",\"city\":\"Milano\"}","{\"street\":\"Via Po 2\",\"city\":\"Roma\"}"}');
+});
+
+it('round-trips PgArrayJsonValue element types through an eloquent model', function (): void {
+    $contacts = [
+        [new Contact('John', ['+39 02 1234'], Priority::High, new Address('Via Roma 1', 'Milano'))],
+        [new Contact('Jane', priority: Priority::Low)],
+    ];
+
+    $model = new TestModel;
+    $model->contacts = $contacts;
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->contacts)->toEqual($contacts);
+});
+
+it('supports a PgArrayJsonValue collection', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'address_collection' => '{"{\"street\":\"Via Roma 1\",\"city\":\"Milano\"}"}',
+    ]);
+
+    expect($model->address_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([new Address('Via Roma 1', 'Milano')]));
+
+    $model->address_collection = collect([new Address('Via Po 2', 'Roma')]);
+
+    expect($model->getAttributes()['address_collection'])
+        ->toBe('{"{\"street\":\"Via Po 2\",\"city\":\"Roma\"}"}');
 });

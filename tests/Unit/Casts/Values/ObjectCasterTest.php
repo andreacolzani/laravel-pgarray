@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\ObjectCaster;
+use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Cents;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
@@ -62,5 +63,5 @@ it('rejects non-scalar logical values', function (): void {
     (new ObjectCaster(Address::class))->set(new Address('Via Roma 1', 'Milano'));
 })->throws(
     UnexpectedValueException::class,
-    '['.Address::class.']::toPgArrayValue() must return a scalar value or null, [array] given.',
+    '['.Address::class.']::toPgArrayValue() must return a scalar value or null, [array] given. Implement ['.PgArrayJsonValue::class.'] to store structured values as JSON.',
 );
