@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts;
 
+use AndreaColzani\PgArray\Casts\Values\PgArrayElementDefinition;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCaster;
-use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
+use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use AndreaColzani\PgArray\Support\PgArrayParser;
@@ -19,10 +20,12 @@ final class PgArray implements CastsAttributes
     private readonly PgArrayValueCaster $caster;
 
     public function __construct(
-        PgArrayCast $type,
+        PgArrayCast|string $type,
         private readonly PgArrayContainer $container,
     ) {
-        $this->caster = PgArrayValueCasterFactory::make($type);
+        $this->caster = PgArrayValueCasterResolver::resolve(
+            new PgArrayElementDefinition($type),
+        );
     }
 
     public function get(

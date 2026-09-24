@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\PgArray;
+use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
@@ -239,3 +240,10 @@ it('serializes null values', function (): void {
         [],
     ))->toBe('{1,NULL,3}');
 });
+
+it('fails explicitly when the element type cannot be resolved', function (): void {
+    new PgArray(
+        type: stdClass::class,
+        container: PgArrayContainer::Array,
+    );
+})->throws(UnsupportedElementException::class);
