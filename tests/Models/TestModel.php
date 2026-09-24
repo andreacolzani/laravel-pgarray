@@ -19,6 +19,7 @@ use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUuidArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use Illuminate\Database\Eloquent\Model;
@@ -60,6 +61,11 @@ final class TestModel extends Model
                 PgArrayContainer::Collection,
             ),
             'priorities' => AsPgArray::of(Priority::class),
+            'emails' => AsPgArray::of(Email::class),
+            'email_collection' => AsPgArray::of(
+                Email::class,
+                PgArrayContainer::Collection,
+            ),
         ];
     }
 }

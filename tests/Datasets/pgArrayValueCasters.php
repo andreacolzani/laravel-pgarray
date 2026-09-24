@@ -12,6 +12,7 @@ use AndreaColzani\PgArray\Casts\Values\FloatCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
+use AndreaColzani\PgArray\Casts\Values\ObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
 use AndreaColzani\PgArray\Casts\Values\StringableCaster;
 use AndreaColzani\PgArray\Casts\Values\StringCaster;
@@ -30,6 +31,7 @@ dataset('pg array value casters', [
     ImmutableDateCaster::class,
     ImmutableDateTimeCaster::class,
     IntegerCaster::class,
+    ObjectCaster::class,
     RealCaster::class,
     StringCaster::class,
     StringableCaster::class,

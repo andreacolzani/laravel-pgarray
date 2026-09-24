@@ -261,7 +261,7 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 5 — `PgArrayValue` contract
+## Milestone 5 — `PgArrayValue` contract [DONE]
 
 Introduce the class-level contract for custom value objects.
 
@@ -307,15 +307,21 @@ final class Address implements PgArrayValue
 
 ### Tasks
 
-- [ ] Create `Contracts/PgArrayValue.php`.
-- [ ] Define/document the contract.
-- [ ] Implement the generic object caster.
-- [ ] Resolve `PgArrayValue` implementations automatically.
-- [ ] Test object → logical value.
-- [ ] Test logical value → object.
-- [ ] Test full array round-trip.
-- [ ] Test Collection.
-- [ ] Test multidimensional arrays.
+- [x] Create `Contracts/PgArrayValue.php`.
+- [x] Define/document the contract.
+- [x] Implement the generic object caster (`ObjectCaster`).
+- [x] Resolve `PgArrayValue` implementations automatically.
+- [x] Test object → logical value.
+- [x] Test logical value → object.
+- [x] Test full array round-trip.
+- [x] Test Collection.
+- [x] Test multidimensional arrays.
+
+> **Design decisions:**
+> - Until Milestone 6, `toPgArrayValue()` may only return scalar values (`string|int|float|bool`) or `null`. Arrays/objects (such as the `Address` example above) fail with an explicit `UnexpectedValueException`: without JSON encoding, `PgArrayParser::serialize()` would read them as an extra array dimension. Milestone 6 lifts this restriction without changing the contract.
+> - On `set()`, raw values that are not instances of the class are normalized through `fromPgArrayValue()` → `toPgArrayValue()` (as `EnumCaster` does with raw backing values), so the class can validate them. Objects of other classes are rejected.
+> - `fromPgArrayValue()` receives the PostgreSQL text representation of the element and is never called with `null`.
+> - A `BackedEnum` that implements `PgArrayValue` is resolved through the contract (`ObjectCaster`), which takes precedence over automatic enum support.
 
 ### Checkpoint
 

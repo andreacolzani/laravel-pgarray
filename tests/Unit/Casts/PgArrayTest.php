@@ -6,6 +6,9 @@ use AndreaColzani\PgArray\Casts\PgArray;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Tests\Fixtures\Cents;
+use AndreaColzani\PgArray\Tests\Fixtures\Color;
+use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
@@ -336,3 +339,87 @@ it('fails explicitly on invalid backed enum values', function (): void {
 
     $cast->get(new TestModel, 'statuses', '{active,archived}', []);
 })->throws(UnexpectedValueException::class);
+
+it('casts a postgres array to PgArrayValue objects', function (): void {
+    $cast = new PgArray(
+        type: Email::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $result = $cast->get(new TestModel, 'emails', '{john@example.com,NULL,jane@example.com}', []);
+
+    expect($result)->toHaveCount(3)
+        ->and($result[0])->toEqual(new Email('john@example.com'))
+        ->and($result[1])->toBeNull()
+        ->and($result[2])->toEqual(new Email('jane@example.com'));
+});
+
+it('serializes PgArrayValue objects to postgres', function (): void {
+    $cast = new PgArray(
+        type: Email::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->set(
+        new TestModel,
+        'emails',
+        [new Email('john@example.com'), null, 'Jane@Example.com'],
+        [],
+    ))->toBe('{john@example.com,NULL,jane@example.com}');
+});
+
+it('round-trips multidimensional PgArrayValue arrays', function (): void {
+    $cast = new PgArray(
+        type: Cents::class,
+        container: PgArrayContainer::Array,
+    );
+
+    $values = [
+        [new Cents(100), new Cents(250)],
+        [new Cents(0), new Cents(-50)],
+    ];
+
+    expect($cast->set(new TestModel, 'amounts', $values, []))
+        ->toBe('{{100,250},{0,-50}}')
+        ->and($cast->get(new TestModel, 'amounts', '{{100,250},{0,-50}}', []))
+        ->toEqual($values);
+});
+
+it('returns a collection of PgArrayValue objects', function (): void {
+    $cast = new PgArray(
+        type: Email::class,
+        container: PgArrayContainer::Collection,
+    );
+
+    $result = $cast->get(new TestModel, 'emails', '{john@example.com}', []);
+
+    expect($result)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([new Email('john@example.com')]))
+        ->and($cast->set(new TestModel, 'emails', collect([new Email('jane@example.com')]), []))
+        ->toBe('{jane@example.com}');
+});
+
+it('escapes logical values of PgArrayValue objects', function (): void {
+    $cast = new PgArray(
+        type: Email::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->set(new TestModel, 'emails', [new Email('"john,doe"@example.com')], []))
+        ->toBe('{"\"john,doe\"@example.com"}')
+        ->and($cast->get(new TestModel, 'emails', '{"\"john,doe\"@example.com"}', []))
+        ->toEqual([new Email('"john,doe"@example.com')]);
+});
+
+it('prefers the PgArrayValue contract over automatic backed enum support', function (): void {
+    $cast = new PgArray(
+        type: Color::class,
+        container: PgArrayContainer::Array,
+    );
+
+    expect($cast->set(new TestModel, 'colors', [Color::Red, Color::Green], []))
+        ->toBe('{RED,GREEN}')
+        ->and($cast->get(new TestModel, 'colors', '{RED,GREEN}', []))
+        ->toBe([Color::Red, Color::Green]);
+});

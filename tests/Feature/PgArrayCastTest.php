@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
@@ -296,4 +297,47 @@ it('supports a backed enum collection', function (): void {
 
     expect($model->getAttributes()['status_collection'])
         ->toBe('{active}');
+});
+
+it('supports PgArrayValue element types when retrieving attributes', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'emails' => '{john@example.com,jane@example.com}',
+    ]);
+
+    expect($model->emails)
+        ->toEqual([
+            new Email('john@example.com'),
+            new Email('jane@example.com'),
+        ]);
+});
+
+it('serializes PgArrayValue element types when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->emails = [
+        new Email('john@example.com'),
+        'Jane@Example.com',
+    ];
+
+    expect($model->getAttributes()['emails'])
+        ->toBe('{john@example.com,jane@example.com}');
+});
+
+it('supports a PgArrayValue collection', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'email_collection' => '{john@example.com}',
+    ]);
+
+    expect($model->email_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([new Email('john@example.com')]));
+
+    $model->email_collection = collect([new Email('jane@example.com')]);
+
+    expect($model->getAttributes()['email_collection'])
+        ->toBe('{jane@example.com}');
 });
