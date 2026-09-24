@@ -39,6 +39,8 @@ Alla fine dell'ultima fase di sviluppo:
 - `PgArray` cast implementato
 - `AsPgArray` implementato
 - `PgArrayCastable` implementato (con `collect()` centralizzato)
+- `AsPgArray::of(PgArrayCast|class-string)` generalizzato (Milestone 2)
+- `PgArrayValueCasterResolver` + `PgArrayElementDefinition` + `UnsupportedElementException` (Milestone 3)
 - castable specifici implementati per: Boolean, Integer, String, Decimal, Float, Double, Real, Stringable, Date, DateTime, ImmutableDate, ImmutableDateTime, Uri, Ulid, Uuid
 - container `array` e `Collection` supportati
 - gestione `null` implementata
@@ -568,11 +570,11 @@ Delegazione:
 ```text
 PgArray
    ↓
-PgArrayValueCasterFactory
+PgArrayElementDefinition (PgArrayCast|class-string)
    ↓
-PgArrayValueCaster
-   ↓
-specific caster
+PgArrayValueCasterResolver
+   ├── PgArrayCast  → PgArrayValueCasterFactory → specific caster
+   └── class-string → (Milestone 4/5) — per ora UnsupportedElementException
 ```
 
 Interfaccia concettuale:

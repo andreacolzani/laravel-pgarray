@@ -145,7 +145,7 @@ Run the standard test/static-analysis/formatting suite and commit.
 
 ---
 
-## Milestone 3 — Element caster resolver
+## Milestone 3 — Element caster resolver [DONE]
 
 Introduce a resolution layer between `PgArray` and individual value casters.
 
@@ -176,17 +176,18 @@ final class PgArrayElementDefinition
 
 Do not add serializer configuration until it is actually needed.
 
-[x] Done
+- [x] Built by `PgArray` for every element type and passed to the resolver.
 
 ### 3.2 `PgArrayValueCasterResolver`
 
 - [x] Resolve built-in `PgArrayCast` values.
-- [ ] Resolve class-string element types.
+- [x] Resolve class-string element types (routing only: unknown classes, `BackedEnum` until Milestone 4, and other classes fail with `UnsupportedElementException`).
 - [x] Produce explicit exceptions for unsupported types.
 
 ### 3.3 Refactor factory
 
-Keep `PgArrayValueCasterFactory` focused on built-in casters.
+- [x] Keep `PgArrayValueCasterFactory` focused on built-in casters.
+- [x] `PgArray` accepts `PgArrayCast|string` and resolves its caster through `PgArrayValueCasterResolver`.
 
 Target structure:
 
@@ -203,10 +204,10 @@ Resolver
 
 ### 3.4 Tests
 
-- [ ] Existing built-in casts still work.
-- [ ] `PgArrayCast` resolution works.
-- [ ] Class-string resolution works.
-- [ ] Unsupported classes fail explicitly.
+- [x] Existing built-in casts still work.
+- [x] `PgArrayCast` resolution works.
+- [x] Class-string resolution works.
+- [x] Unsupported classes fail explicitly.
 
 ### Checkpoint
 
