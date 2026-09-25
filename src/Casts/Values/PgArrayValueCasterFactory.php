@@ -27,6 +27,9 @@ final class PgArrayValueCasterFactory
             PgArrayCast::Uri => new UriCaster,
             PgArrayCast::Uuid => new UuidCaster,
             PgArrayCast::Ulid => new UlidCaster,
+            PgArrayCast::Bytea => new ByteaCaster,
+            PgArrayCast::Inet => new InetCaster,
+            PgArrayCast::MacAddr => new MacAddrCaster,
         };
     }
 }

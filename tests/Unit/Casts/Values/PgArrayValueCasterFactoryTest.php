@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\BooleanCaster;
+use AndreaColzani\PgArray\Casts\Values\ByteaCaster;
 use AndreaColzani\PgArray\Casts\Values\DateCaster;
 use AndreaColzani\PgArray\Casts\Values\DateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
@@ -11,7 +12,9 @@ use AndreaColzani\PgArray\Casts\Values\FloatCaster;
 use AndreaColzani\PgArray\Casts\Values\HashedCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
+use AndreaColzani\PgArray\Casts\Values\InetCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
+use AndreaColzani\PgArray\Casts\Values\MacAddrCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
 use AndreaColzani\PgArray\Casts\Values\StringableCaster;
@@ -99,4 +102,19 @@ it('creates an UlidCaster', function (): void {
 it('creates the hashed caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Hashed))
         ->toBeInstanceOf(HashedCaster::class);
+});
+
+it('creates the bytea caster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Bytea))
+        ->toBeInstanceOf(ByteaCaster::class);
+});
+
+it('creates the inet caster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Inet))
+        ->toBeInstanceOf(InetCaster::class);
+});
+
+it('creates the macaddr caster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::MacAddr))
+        ->toBeInstanceOf(MacAddrCaster::class);
 });

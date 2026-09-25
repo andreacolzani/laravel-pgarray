@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\BooleanCaster;
+use AndreaColzani\PgArray\Casts\Values\ByteaCaster;
 use AndreaColzani\PgArray\Casts\Values\DateCaster;
 use AndreaColzani\PgArray\Casts\Values\DateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
@@ -12,8 +13,10 @@ use AndreaColzani\PgArray\Casts\Values\FloatCaster;
 use AndreaColzani\PgArray\Casts\Values\HashedCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
+use AndreaColzani\PgArray\Casts\Values\InetCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\JsonObjectCaster;
+use AndreaColzani\PgArray\Casts\Values\MacAddrCaster;
 use AndreaColzani\PgArray\Casts\Values\ObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\RealCaster;
 use AndreaColzani\PgArray\Casts\Values\StringableCaster;
@@ -42,4 +45,7 @@ dataset('pg array value casters', [
     UriCaster::class,
     UuidCaster::class,
     UlidCaster::class,
+    ByteaCaster::class,
+    InetCaster::class,
+    MacAddrCaster::class,
 ]);

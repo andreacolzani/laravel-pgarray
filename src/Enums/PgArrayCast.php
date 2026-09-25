@@ -22,6 +22,10 @@ enum PgArrayCast: string
 
     case Hashed = 'hashed';
 
+    case Bytea = 'bytea';
+    case Inet = 'inet';
+    case MacAddr = 'macaddr';
+
     case Uri = 'uri';
     case Uuid = 'uuid';
     case Ulid = 'ulid';

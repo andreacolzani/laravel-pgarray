@@ -646,3 +646,71 @@ it('supports a hashed collection', function (): void {
         ->toHaveCount(2)
         ->and(PgArrayHash::find('beta', $restored->recovery_code_collection))->toBe(1);
 });
+
+it('stores bytea elements in the hex format', function (): void {
+    $model = new TestModel;
+
+    $model->bytea_array = ["\x00\x01", null, 'ab'];
+
+    expect($model->getAttributes()['bytea_array'])
+        ->toBe('{"\\\\x0001",NULL,"\\\\x6162"}');
+});
+
+it('retrieves bytea elements as binary strings', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'bytea_array' => '{"\\\\x00ff",NULL,"\\\\x"}',
+    ]);
+
+    expect($model->bytea_array)->toBe(["\x00\xff", null, '']);
+});
+
+it('round trips binary data through a bytea array', function (): void {
+    $binary = [random_bytes(16), "\x00\"\\{},", ''];
+
+    $model = new TestModel;
+    $model->bytea_array = $binary;
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->bytea_array)->toBe($binary);
+});
+
+it('normalizes inet elements when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->inet_array = ['192.168.1.5/24', '2001:0DB8::0001/128', null];
+
+    expect($model->getAttributes()['inet_array'])
+        ->toBe('{192.168.1.5/24,2001:db8::1,NULL}')
+        ->and($model->inet_array)->toBe(['192.168.1.5/24', '2001:db8::1', null]);
+});
+
+it('supports an inet collection', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'inet_collection' => '{10.0.0.1,::1}',
+    ]);
+
+    expect($model->inet_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect(['10.0.0.1', '::1']));
+});
+
+it('rejects invalid inet elements', function (): void {
+    $model = new TestModel;
+
+    $model->inet_array = ['10.0.0.1', 'not-an-ip'];
+})->throws(UnexpectedValueException::class, 'Invalid inet value [not-an-ip].');
+
+it('normalizes macaddr elements when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->macaddr_array = ['08-00-2B-01-02-03', '0800.2b01.0204'];
+
+    expect($model->getAttributes()['macaddr_array'])
+        ->toBe('{08:00:2b:01:02:03,08:00:2b:01:02:04}')
+        ->and($model->macaddr_array)->toBe(['08:00:2b:01:02:03', '08:00:2b:01:02:04']);
+});
