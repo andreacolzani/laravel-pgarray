@@ -624,7 +624,7 @@ Do not turn the package into a GIS library.
 - [x] Define serialization/deserialization boundaries.
 - [x] Consider external serializers for richer GIS objects.
 - [x] Implement the minimum useful representation.
-- [ ] Add PostgreSQL/PostGIS integration tests where applicable (moved to Milestone 14: the suite has no real PostgreSQL yet).
+- [x] Add PostgreSQL/PostGIS integration tests where applicable (done in Milestone 14).
 
 Usage:
 
@@ -872,64 +872,71 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 14 — Real PostgreSQL integration suite
+## Milestone 14 — Real PostgreSQL integration suite [DONE]
 
 Introduce/expand tests against real PostgreSQL.
 
 ### Storage
 
-- [ ] Insert
-- [ ] Select
-- [ ] Update
-- [ ] Null arrays
-- [ ] Empty arrays
+- [x] Insert
+- [x] Select
+- [x] Update
+- [x] Null arrays
+- [x] Empty arrays
 
 ### Types
 
-- [ ] Integer
-- [ ] BigInt
-- [ ] SmallInt
-- [ ] Decimal
-- [ ] Numeric
-- [ ] Float
-- [ ] Double
-- [ ] Real
-- [ ] Boolean
-- [ ] Char
-- [ ] Varchar
-- [ ] Text
-- [ ] UUID
-- [ ] Date
-- [ ] Time
-- [ ] TimeTz
-- [ ] Timestamp
-- [ ] TimestampTz
-- [ ] JSON
-- [ ] JSONB
+- [x] Integer
+- [x] BigInt
+- [x] SmallInt
+- [x] Decimal
+- [x] Numeric
+- [x] Float
+- [x] Double
+- [x] Real
+- [x] Boolean
+- [x] Char
+- [x] Varchar
+- [x] Text
+- [x] UUID
+- [x] Date
+- [x] Time
+- [x] TimeTz
+- [x] Timestamp
+- [x] TimestampTz
+- [x] JSON
+- [x] JSONB
 
 ### Structure
 
-- [ ] Multidimensional arrays
-- [ ] Quoted values
-- [ ] Null elements
-- [ ] Empty strings
-- [ ] Escaped/special characters
+- [x] Multidimensional arrays
+- [x] Quoted values
+- [x] Null elements
+- [x] Empty strings
+- [x] Escaped/special characters
 
 ### Advanced
 
-- [ ] Backed enums
-- [ ] Custom objects
-- [ ] External serializers
-- [ ] Encrypted values
-- [ ] Hashed values
-- [ ] Special PostgreSQL types (`bytea`, `inet`, `macaddr`, pgvector `vector`, PostGIS `geometry` / `geography` with `Point` EWKB round trip)
+- [x] Backed enums
+- [x] Custom objects
+- [x] External serializers
+- [x] Encrypted values
+- [x] Hashed values
+- [x] Special PostgreSQL types (`bytea`, `inet`, `macaddr`, pgvector `vector`, PostGIS `geometry` / `geography` with `Point` EWKB round trip)
 
 ### Query builder
 
-- [ ] Contains
-- [ ] Contained by
-- [ ] Overlap
-- [ ] Concatenation
+- [x] Contains
+- [x] Contained by
+- [x] Overlap
+- [x] Concatenation
+
+> **Design decisions:**
+> - The suite runs every cast through Eloquent against real PostgreSQL (`tests/Integration`, group `pgsql`): `tests/Models/PgsqlModel` is a model on the `pgsql` connection whose table (`pgarray_models`) has one `pgArray()` column per cast, created before each test. Each test writes through the cast, checks the text stored by PostgreSQL (and, where useful, server-side functions such as `cardinality()`, `array_ndims()`, `ST_AsEWKT()`, `->>`), then reads the value back with `fresh()`.
+> - `PgArrayStorageTest`: insert / select / update / dirty checking, `NULL` and empty arrays; every primitive type (`integer`, `bigint` and `smallint` limits, `numeric(10,2)` scale, `double precision`, single-precision `real`, blank-padded `char(n)`, `time` / `timetz` strings, `timestamp` / `timestamptz` under several session time zones, `json[]` / `jsonb[]` objects); multidimensional arrays (ragged arrays are rejected by PostgreSQL), `NULL` elements, empty strings, quotes, backslashes, `NULL`-like strings, braces, delimiters, newlines and Unicode.
+> - `PgArrayAdvancedTest`: backed enums, `PgArrayValue` objects, external serializers (attribute, contract and configuration), encrypted and hashed values, `bytea` (hex and `escape` output), `inet` / `macaddr` normalization, pgvector (dimension checked by PostgreSQL) and PostGIS (`Point` EWKT → EWKB round trip, passthrough geometries, a delimited serializer, filters and concatenation with the `:` delimiter).
+> - The query builder operators were already covered by `PgArrayQueryTest` (Milestone 13).
+> - PostgreSQL returns `bytea` columns selected directly as PHP streams; tests compare them with `encode(..., 'hex')`. The local test database must use the UTF8 encoding, like CI.
 
 > **Fixes found by the integration suite:**
 > - **Date-times keep their offset (differs from Laravel).** `DateTimeCaster` / `ImmutableDateTimeCaster` write `Y-m-d H:i:s.uP` (e.g. `2026-08-20 14:30:00.000000+02:00`), while Laravel's `datetime` cast writes `Y-m-d H:i:s` without an offset. Without the offset, PostgreSQL reads a `timestamptz` value in the **session** time zone: with an application in UTC and a server in Europe/Berlin, `14:30 UTC` was stored as `14:30+02` and read back as `12:30 UTC`, and any Carbon instance not in the session time zone was shifted. With the offset, `timestamptz[]` stores the exact instant whatever the session time zone; `timestamp[]` (without time zone) ignores the offset, so it keeps the wall-clock time as before. Values read with an offset (`timestamptz`) are converted to the default PHP time zone (`date_default_timezone_get()`, i.e. `app.timezone`), like Laravel's dates. Query builder operators format `DateTimeInterface` elements the same way. To be documented in the README (Milestone 17).
