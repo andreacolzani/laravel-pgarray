@@ -13,6 +13,7 @@ use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
+use AndreaColzani\PgArray\Types\Vector;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -713,4 +714,90 @@ it('normalizes macaddr elements when setting attributes', function (): void {
     expect($model->getAttributes()['macaddr_array'])
         ->toBe('{08:00:2b:01:02:03,08:00:2b:01:02:04}')
         ->and($model->macaddr_array)->toBe(['08:00:2b:01:02:03', '08:00:2b:01:02:04']);
+});
+
+it('stores vector elements in the pgvector format', function (): void {
+    $model = new TestModel;
+
+    $model->embeddings = [new Vector([1, 2.5, -3]), null, '[4,5,6]'];
+
+    expect($model->getAttributes()['embeddings'])
+        ->toBe('{"[1,2.5,-3]",NULL,"[4,5,6]"}');
+});
+
+it('retrieves vector elements as Vector instances', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'embeddings' => '{"[1,2.5,-3]","[0.1,0.2]"}',
+    ]);
+
+    expect($model->embeddings)
+        ->toEqual([new Vector([1, 2.5, -3]), new Vector([0.1, 0.2])]);
+});
+
+it('reassigns retrieved vectors unchanged', function (): void {
+    $model = new TestModel;
+    $model->embeddings = [new Vector([1, 2]), new Vector([3, 4])];
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+    $restored->embeddings = [...$restored->embeddings, new Vector([5, 6])];
+
+    expect($restored->getAttributes()['embeddings'])
+        ->toBe('{"[1,2]","[3,4]","[5,6]"}');
+});
+
+it('supports a vector collection', function (): void {
+    $model = new TestModel;
+
+    $model->embedding_collection = collect([new Vector([1, 2])]);
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->embedding_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([new Vector([1, 2])]));
+});
+
+it('serializes vectors as JSON lists', function (): void {
+    $model = new TestModel;
+
+    $model->embeddings = [new Vector([1, 2.5])];
+
+    expect($model->toArray()['embeddings'])->toEqual([new Vector([1, 2.5])])
+        ->and(json_decode($model->toJson(), true)['embeddings'])->toBe([[1, 2.5]]);
+});
+
+it('validates vector dimensions when configured', function (): void {
+    $model = new TestModel;
+
+    $model->rgb_vectors = [new Vector([255, 128, 0])];
+    $model->rgb_vector_collection = collect([new Vector([0, 0, 0])]);
+
+    expect($model->rgb_vectors)->toEqual([new Vector([255, 128, 0])])
+        ->and($model->rgb_vector_collection)->toBeInstanceOf(Collection::class);
+});
+
+it('rejects vectors with other dimensions', function (): void {
+    $model = new TestModel;
+
+    $model->rgb_vectors = [new Vector([255, 128])];
+})->throws(UnexpectedValueException::class, 'Expected a vector with 3 dimensions, 2 given.');
+
+it('rejects plain lists as vector elements', function (): void {
+    $model = new TestModel;
+
+    $model->embeddings = [[1.0, 2.0]];
+})->throws(UnexpectedValueException::class, 'Unable to cast [float]');
+
+it('encrypts vector elements', function (): void {
+    $model = new TestModel;
+
+    $model->encrypted_vectors = [new Vector([1, 2])];
+
+    $elements = PgArrayParser::parse($model->getAttributes()['encrypted_vectors']);
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect(Crypt::decryptString($elements[0]))->toBe('[1,2]')
+        ->and($restored->encrypted_vectors)->toEqual([new Vector([1, 2])]);
 });

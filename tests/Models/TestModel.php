@@ -22,6 +22,7 @@ use AndreaColzani\PgArray\Casts\AsRealArray;
 use AndreaColzani\PgArray\Casts\AsStringableArray;
 use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUuidArray;
+use AndreaColzani\PgArray\Casts\AsVectorArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
@@ -104,6 +105,11 @@ final class TestModel extends Model
             'inet_array' => AsInetArray::class,
             'inet_collection' => AsInetArray::collect(),
             'macaddr_array' => AsMacAddrArray::class,
+            'embeddings' => AsVectorArray::class,
+            'embedding_collection' => AsVectorArray::collect(),
+            'rgb_vectors' => AsVectorArray::withDimensions(3),
+            'rgb_vector_collection' => AsVectorArray::withDimensions(3, PgArrayContainer::Collection),
+            'encrypted_vectors' => AsPgArray::encrypted(PgArrayCast::Vector),
         ];
     }
 }

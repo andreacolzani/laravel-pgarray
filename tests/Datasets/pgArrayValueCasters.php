@@ -24,6 +24,7 @@ use AndreaColzani\PgArray\Casts\Values\StringCaster;
 use AndreaColzani\PgArray\Casts\Values\UlidCaster;
 use AndreaColzani\PgArray\Casts\Values\UriCaster;
 use AndreaColzani\PgArray\Casts\Values\UuidCaster;
+use AndreaColzani\PgArray\Casts\Values\VectorCaster;
 
 dataset('pg array value casters', [
     BooleanCaster::class,
@@ -48,4 +49,5 @@ dataset('pg array value casters', [
     ByteaCaster::class,
     InetCaster::class,
     MacAddrCaster::class,
+    VectorCaster::class,
 ]);

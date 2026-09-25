@@ -17,6 +17,7 @@ use UnitEnum;
  * Resolution layer between PgArray and individual value casters.
  *
  *   Resolver
+ *    ├── PgArrayValueCaster → used as is (casters configured by castables)
  *    ├── PgArrayCast  →  PgArrayValueCasterFactory
  *    └── class-string →  JsonSerializerCaster / SerializerCaster (external serializer)
  *                        / JsonObjectCaster (PgArrayJsonValue) / ObjectCaster (PgArrayValue)
@@ -46,9 +47,11 @@ final class PgArrayValueCasterResolver
     {
         $type = $definition->type;
 
-        $caster = $type instanceof PgArrayCast
-            ? PgArrayValueCasterFactory::make($type)
-            : self::resolveClassString($type);
+        $caster = match (true) {
+            $type instanceof PgArrayValueCaster => $type,
+            $type instanceof PgArrayCast => PgArrayValueCasterFactory::make($type),
+            default => self::resolveClassString($type),
+        };
 
         return $definition->encrypted
             ? new EncryptedCaster($caster)

@@ -20,7 +20,7 @@ final class PgArray implements CastsAttributes
     private readonly PgArrayValueCaster $caster;
 
     public function __construct(
-        PgArrayCast|string $type,
+        PgArrayCast|PgArrayValueCaster|string $type,
         private readonly PgArrayContainer $container,
         bool $encrypted = false,
     ) {

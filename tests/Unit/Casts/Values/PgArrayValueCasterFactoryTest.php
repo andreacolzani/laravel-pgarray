@@ -22,6 +22,7 @@ use AndreaColzani\PgArray\Casts\Values\StringCaster;
 use AndreaColzani\PgArray\Casts\Values\UlidCaster;
 use AndreaColzani\PgArray\Casts\Values\UriCaster;
 use AndreaColzani\PgArray\Casts\Values\UuidCaster;
+use AndreaColzani\PgArray\Casts\Values\VectorCaster;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 
 it('creates the boolean caster', function (): void {
@@ -117,4 +118,9 @@ it('creates the inet caster', function (): void {
 it('creates the macaddr caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::MacAddr))
         ->toBeInstanceOf(MacAddrCaster::class);
+});
+
+it('creates the vector caster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Vector))
+        ->toBeInstanceOf(VectorCaster::class);
 });

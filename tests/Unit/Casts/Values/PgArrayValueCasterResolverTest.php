@@ -13,6 +13,7 @@ use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
 use AndreaColzani\PgArray\Casts\Values\SerializerCaster;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
+use AndreaColzani\PgArray\Casts\Values\VectorCaster;
 use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
@@ -30,6 +31,18 @@ it('resolves a built-in cast to the factory caster', function (PgArrayCast $type
     expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($type)))
         ->toBeInstanceOf(PgArrayValueCasterFactory::make($type)::class);
 })->with(PgArrayCast::cases());
+
+it('uses a configured caster as is', function (): void {
+    $caster = new VectorCaster(3);
+
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($caster)))
+        ->toBe($caster);
+});
+
+it('wraps a configured caster when encrypted', function (): void {
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(new VectorCaster(3), encrypted: true)))
+        ->toBeInstanceOf(EncryptedCaster::class);
+});
 
 it('resolves an integer cast to the integer caster', function (): void {
     expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(PgArrayCast::Integer)))

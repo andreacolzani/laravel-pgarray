@@ -22,6 +22,7 @@ use AndreaColzani\PgArray\Casts\AsStringArray;
 use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUriArray;
 use AndreaColzani\PgArray\Casts\AsUuidArray;
+use AndreaColzani\PgArray\Casts\AsVectorArray;
 
 dataset('pg array castables', [
     AsBooleanArray::class,
@@ -44,4 +45,5 @@ dataset('pg array castables', [
     AsByteaArray::class,
     AsInetArray::class,
     AsMacAddrArray::class,
+    AsVectorArray::class,
 ]);

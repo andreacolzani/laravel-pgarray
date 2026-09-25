@@ -30,6 +30,7 @@ final class PgArrayValueCasterFactory
             PgArrayCast::Bytea => new ByteaCaster,
             PgArrayCast::Inet => new InetCaster,
             PgArrayCast::MacAddr => new MacAddrCaster,
+            PgArrayCast::Vector => new VectorCaster,
         };
     }
 }
