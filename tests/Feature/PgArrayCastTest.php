@@ -13,6 +13,7 @@ use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
+use AndreaColzani\PgArray\Types\Point;
 use AndreaColzani\PgArray\Types\Vector;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -800,4 +801,66 @@ it('encrypts vector elements', function (): void {
 
     expect(Crypt::decryptString($elements[0]))->toBe('[1,2]')
         ->and($restored->encrypted_vectors)->toEqual([new Vector([1, 2])]);
+});
+
+it('passes geometry elements through', function (): void {
+    $model = new TestModel;
+
+    $model->shapes = ['POLYGON((0 0,1 0,1 1,0 0))', null, new Point(45.5, 9.25)];
+
+    expect($model->getAttributes()['shapes'])
+        ->toBe('{"POLYGON((0 0,1 0,1 1,0 0))",NULL,"SRID=4326;POINT(9.25 45.5)"}');
+
+    $model->setRawAttributes([
+        'shapes' => '{0101000020E6100000000000000000F03F0000000000000040,NULL}',
+    ]);
+
+    expect($model->shapes)
+        ->toBe(['0101000020E6100000000000000000F03F0000000000000040', null]);
+});
+
+it('supports a geography collection', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'area_collection' => '{0101000020E6100000000000000000F03F0000000000000040}',
+    ]);
+
+    expect($model->area_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect(['0101000020E6100000000000000000F03F0000000000000040']));
+});
+
+it('stores points as EWKT', function (): void {
+    $model = new TestModel;
+
+    $model->locations = [new Point(45.4642, 9.19), null, 'POINT(12.4964 41.9028)'];
+
+    expect($model->getAttributes()['locations'])
+        ->toBe('{"SRID=4326;POINT(9.19 45.4642)",NULL,"POINT(12.4964 41.9028)"}');
+});
+
+it('retrieves points from EWKB', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'locations' => '{0101000020E6100000000000000000F03F0000000000000040,NULL}',
+    ]);
+
+    expect($model->locations)
+        ->toEqual([new Point(latitude: 2, longitude: 1), null]);
+});
+
+it('supports a point collection', function (): void {
+    $model = new TestModel;
+
+    $model->location_collection = collect([new Point(45.4642, 9.19)]);
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->location_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([new Point(45.4642, 9.19)]))
+        ->and(json_decode($restored->toJson(), true)['location_collection'])
+        ->toBe([['type' => 'Point', 'coordinates' => [9.19, 45.4642]]]);
 });

@@ -9,6 +9,7 @@ use AndreaColzani\PgArray\Casts\Values\DateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
 use AndreaColzani\PgArray\Casts\Values\DoubleCaster;
 use AndreaColzani\PgArray\Casts\Values\FloatCaster;
+use AndreaColzani\PgArray\Casts\Values\GeometryCaster;
 use AndreaColzani\PgArray\Casts\Values\HashedCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
@@ -124,3 +125,8 @@ it('creates the vector caster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Vector))
         ->toBeInstanceOf(VectorCaster::class);
 });
+
+it('creates the geometry caster for geometry and geography', function (PgArrayCast $type): void {
+    expect(PgArrayValueCasterFactory::make($type))
+        ->toBeInstanceOf(GeometryCaster::class);
+})->with([PgArrayCast::Geometry, PgArrayCast::Geography]);

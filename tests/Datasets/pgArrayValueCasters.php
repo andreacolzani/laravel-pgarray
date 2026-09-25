@@ -10,6 +10,7 @@ use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
 use AndreaColzani\PgArray\Casts\Values\DoubleCaster;
 use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\FloatCaster;
+use AndreaColzani\PgArray\Casts\Values\GeometryCaster;
 use AndreaColzani\PgArray\Casts\Values\HashedCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
@@ -50,4 +51,5 @@ dataset('pg array value casters', [
     InetCaster::class,
     MacAddrCaster::class,
     VectorCaster::class,
+    GeometryCaster::class,
 ]);

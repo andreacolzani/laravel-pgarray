@@ -31,6 +31,7 @@ final class PgArrayValueCasterFactory
             PgArrayCast::Inet => new InetCaster,
             PgArrayCast::MacAddr => new MacAddrCaster,
             PgArrayCast::Vector => new VectorCaster,
+            PgArrayCast::Geometry, PgArrayCast::Geography => new GeometryCaster,
         };
     }
 }

@@ -28,6 +28,9 @@ enum PgArrayCast: string
 
     case Vector = 'vector';
 
+    case Geometry = 'geometry';
+    case Geography = 'geography';
+
     case Uri = 'uri';
     case Uuid = 'uuid';
     case Ulid = 'ulid';

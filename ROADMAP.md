@@ -578,67 +578,77 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 10 — Special PostgreSQL types
+## Milestone 10 — Special PostgreSQL types [DONE]
+
+New `PgArrayCast` cases: `Bytea`, `Inet`, `MacAddr`, `Vector`, `Geometry`, `Geography`, each with a dedicated castable (`AsByteaArray`, `AsInetArray`, `AsMacAddrArray`, `AsVectorArray`, `AsGeometryArray`, `AsGeographyArray`). Value objects live in the new `Types` namespace (`Types\Vector`, `Types\Point`).
 
 ### `bytea`
 
-Initial representation:
+Representation: raw binary `string`.
 
-```php
-string
-```
-
-- [ ] `ByteaCaster`
-- [ ] Binary-safe get/set behavior
-- [ ] Tests with binary data
+- [x] `ByteaCaster`
+- [x] Binary-safe get/set behavior
+- [x] Tests with binary data
 
 ### `inet`
 
-Initial representation:
+Representation: normalized `string`.
 
-```php
-string
-```
-
-- [ ] `InetCaster`
-- [ ] Validation/normalization as appropriate
-- [ ] Tests for IPv4 and IPv6
+- [x] `InetCaster`
+- [x] Validation/normalization as appropriate
+- [x] Tests for IPv4 and IPv6
 
 ### `macaddr`
 
-Initial representation:
+Representation: normalized `string` (`08:00:2b:01:02:03`).
 
-```php
-string
-```
-
-- [ ] `MacaddrCaster`
-- [ ] Validation/normalization as appropriate
-- [ ] Tests
+- [x] `MacAddrCaster`
+- [x] Validation/normalization as appropriate
+- [x] Tests
 
 ### `vector`
 
-Initial candidate representation:
+Representation: `Types\Vector` (immutable, wraps `list<float>`).
 
-```php
-list<float>
-```
-
-- [ ] Define representation.
-- [ ] Implement `VectorCaster`.
-- [ ] Handle pgvector format.
-- [ ] Consider dimension validation.
-- [ ] Test realistic vectors.
+- [x] Define representation.
+- [x] Implement `VectorCaster`.
+- [x] Handle pgvector format.
+- [x] Consider dimension validation (`AsVectorArray::withDimensions()`).
+- [x] Test realistic vectors.
 
 ### `geometry` / `geography`
 
 Do not turn the package into a GIS library.
 
-- [ ] Decide on default representation: WKT, WKB, GeoJSON, or value object.
-- [ ] Define serialization/deserialization boundaries.
-- [ ] Consider external serializers for richer GIS objects.
-- [ ] Implement the minimum useful representation.
-- [ ] Add PostgreSQL/PostGIS integration tests where applicable.
+- [x] Decide on default representation: string passthrough, plus an optional `Types\Point` value object.
+- [x] Define serialization/deserialization boundaries.
+- [x] Consider external serializers for richer GIS objects.
+- [x] Implement the minimum useful representation.
+- [ ] Add PostgreSQL/PostGIS integration tests where applicable (moved to Milestone 14: the suite has no real PostgreSQL yet).
+
+Usage:
+
+```php
+'files'     => AsByteaArray::class,                  // bytea[]
+'ips'       => AsInetArray::class,                   // inet[]
+'macs'      => AsMacAddrArray::class,                // macaddr[]
+'chunks'    => AsVectorArray::withDimensions(1536),  // vector(1536)[]
+'areas'     => AsGeographyArray::class,              // geography[] (strings)
+'locations' => AsPgArray::of(Point::class),          // geometry[] / geography[] points
+
+$model->chunks = [new Vector([0.12, -0.5, ...])];
+$model->locations = [new Point(latitude: 45.4642, longitude: 9.19)]; // SRID 4326
+```
+
+> **Design decisions:**
+> - `bytea`: assigned strings are always raw binary data and are stored in the hex format (`\x0a0b…`). On read, the hex format is decoded, and so is the legacy `escape` format (`bytea_output = 'escape'`).
+> - `inet`: values are validated (`address[/prefix]`, IPv4 or IPv6) and normalized to the PostgreSQL output form: IPv6 compressed and lowercase, full-length prefixes (`/32`, `/128`) omitted. `cidr` and `macaddr8` are out of scope.
+> - `macaddr`: every PostgreSQL input format is accepted and normalized to `08:00:2b:01:02:03`.
+> - `vector`: not a duplicate of `float8[][]`, because a `vector[]` column only accepts pgvector literals (`{"[1,2,3]"}`). Elements are `Types\Vector` objects rather than `list<float>`, because PHP arrays are nested dimensions of the PostgreSQL array: a list would be split into separate elements when assigned. `Vector` is `Countable`, `Stringable` (pgvector format) and `JsonSerializable` (plain list). Dimension validation is optional (`AsVectorArray::withDimensions(n)`) and is checked on both set and get. pgvector stores single-precision floats.
+> - Configured casters: `PgArrayElementDefinition` (and `PgArray`) also accept a ready-made `PgArrayValueCaster`, which the resolver uses as is (encryption still applies). `AsVectorArray::withDimensions()` uses this to pass a `VectorCaster` with its dimensions. It is also the extension point for parameterized types (Milestone 11).
+> - `geometry` / `geography`: `GeometryCaster` is a passthrough. It reads the hex EWKB returned by PostgreSQL as a string, and writes WKT / EWKT / EWKB strings unchanged, or a `Point` as EWKT. There is no GIS parsing and no GIS dependency.
+> - `Types\Point(latitude, longitude, srid = 4326)` is the only spatial object and the **recommended way to work with points**. It implements `PgArrayValue`, so `AsPgArray::of(Point::class)` works through `ObjectCaster`. It writes EWKT (`SRID=4326;POINT(lng lat)`) and reads 2D EWKB (either byte order, SRID optional) or WKT/EWKT. `JsonSerializable` produces GeoJSON. The argument order matches `tarfin-labs/laravel-spatial`.
+> - Richer geometries, or objects of GIS libraries, are mapped through external serializers (Milestone 7). For example, a `PgArrayValueSerializer` that turns a third-party `Point` into EWKT and back, registered in `pgarray.serializers`.
 
 ### Checkpoint
 
@@ -817,7 +827,7 @@ Introduce/expand tests against real PostgreSQL.
 - [ ] External serializers
 - [ ] Encrypted values
 - [ ] Hashed values
-- [ ] Special PostgreSQL types
+- [ ] Special PostgreSQL types (`bytea`, `inet`, `macaddr`, pgvector `vector`, PostGIS `geometry` / `geography` with `Point` EWKB round trip)
 
 ### Query builder
 

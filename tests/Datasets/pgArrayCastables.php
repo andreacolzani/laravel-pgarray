@@ -10,6 +10,8 @@ use AndreaColzani\PgArray\Casts\AsDecimalArray;
 use AndreaColzani\PgArray\Casts\AsDoubleArray;
 use AndreaColzani\PgArray\Casts\AsEncryptedArray;
 use AndreaColzani\PgArray\Casts\AsFloatArray;
+use AndreaColzani\PgArray\Casts\AsGeographyArray;
+use AndreaColzani\PgArray\Casts\AsGeometryArray;
 use AndreaColzani\PgArray\Casts\AsHashedArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
@@ -46,4 +48,6 @@ dataset('pg array castables', [
     AsInetArray::class,
     AsMacAddrArray::class,
     AsVectorArray::class,
+    AsGeometryArray::class,
+    AsGeographyArray::class,
 ]);

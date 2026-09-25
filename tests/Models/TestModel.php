@@ -11,6 +11,8 @@ use AndreaColzani\PgArray\Casts\AsDecimalArray;
 use AndreaColzani\PgArray\Casts\AsDoubleArray;
 use AndreaColzani\PgArray\Casts\AsEncryptedArray;
 use AndreaColzani\PgArray\Casts\AsFloatArray;
+use AndreaColzani\PgArray\Casts\AsGeographyArray;
+use AndreaColzani\PgArray\Casts\AsGeometryArray;
 use AndreaColzani\PgArray\Casts\AsHashedArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
@@ -33,6 +35,7 @@ use AndreaColzani\PgArray\Tests\Fixtures\Money;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
+use AndreaColzani\PgArray\Types\Point;
 use Illuminate\Database\Eloquent\Model;
 
 final class TestModel extends Model
@@ -110,6 +113,10 @@ final class TestModel extends Model
             'rgb_vectors' => AsVectorArray::withDimensions(3),
             'rgb_vector_collection' => AsVectorArray::withDimensions(3, PgArrayContainer::Collection),
             'encrypted_vectors' => AsPgArray::encrypted(PgArrayCast::Vector),
+            'shapes' => AsGeometryArray::class,
+            'area_collection' => AsGeographyArray::collect(),
+            'locations' => AsPgArray::of(Point::class),
+            'location_collection' => AsPgArray::of(Point::class, PgArrayContainer::Collection),
         ];
     }
 }
