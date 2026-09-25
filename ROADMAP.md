@@ -1060,75 +1060,48 @@ Public API (covered by semantic versioning):
 
 ---
 
-## Milestone 17 — Documentation
+## Milestone 17 — Documentation [DONE]
 
-Update the README to describe only implemented and stable functionality.
+The README was rewritten from scratch (the skeleton text is gone) and describes only implemented and stable functionality.
 
-Suggested structure:
+### Sections
 
-```text
-# Laravel PostgreSQL Arrays
+- [x] Installation
+- [x] Basic usage
+- [x] Built-in casts
+- [x] Collections
+- [x] Multidimensional arrays
+- [x] Enums
+- [x] Custom value objects
+- [x] JSON / JSONB
+- [x] External serializers
+- [x] Dates and time zones
+- [x] Encrypted arrays
+- [x] Hashed arrays
+- [x] PostgreSQL special types
+- [x] Migrations
+- [x] Query builder
+- [x] Exceptions
+- [x] Supported PostgreSQL types
+- [x] PHP / Laravel compatibility
+- [x] Testing
+- [x] License
 
-## Installation
+### Examples
 
-## Basic usage
+- [x] `AsIntegerArray::class`
+- [x] `AsIntegerArray::collect()`
+- [x] `AsPgArray::of(PgArrayCast::Integer)`
+- [x] `AsPgArray::of(Status::class)`
+- [x] `AsPgArray::of(Address::class)`
 
-## Built-in casts
-
-## Collections
-
-## Multidimensional arrays
-
-## Enums
-
-## Custom value objects
-
-## JSON / JSONB
-
-## Dates and time zones
-
-## Encrypted arrays
-
-## Hashed arrays
-
-## PostgreSQL special types
-
-## Migrations
-
-## Query builder
-
-## Supported PostgreSQL types
-
-## PHP / Laravel compatibility
-
-## Testing
-
-## License
-```
-
-The "Dates and time zones" section explains: the format written by the date-time casters (`Y-m-d H:i:s.uP`, with microseconds and offset) and how it differs from Laravel's `$dateFormat` / `Grammar::getDateFormat()`; that it matches Laravel whenever the session and application time zones match, and stays correct otherwise; that `timestamptz` values are read in the application time zone; and the advice to still set the `timezone` of the `pgsql` connection to the application time zone, for Laravel's native (non-array) date columns.
-
-Include practical examples for:
-
-```php
-AsIntegerArray::class
-```
-
-```php
-AsIntegerArray::collect()
-```
-
-```php
-AsPgArray::of(PgArrayCast::Integer)
-```
-
-```php
-AsPgArray::of(Status::class)
-```
-
-```php
-AsPgArray::of(Address::class)
-```
+> **Design decisions:**
+> - Two sections were added to the suggested structure: "External serializers" (Milestone 7, too large to fit in "Custom value objects") and "Exceptions" (the `PgArrayException` hierarchy of Milestone 16).
+> - "Dates and time zones" documents the `Y-m-d H:i:s.uP` format of the date-time casts and how it differs from Laravel's `$dateFormat` / `Grammar::getDateFormat()`, that it matches Laravel whenever the session and application time zones match and stays correct otherwise, that `timestamptz` values are read in the application time zone, and the advice to set the `timezone` of the `pgsql` connection.
+> - Only the public API of Milestone 16 is documented: `@internal` classes (`PgArrayParser`, value casters, …) are not mentioned, except the `PgArrayDelimited` contract for custom PostGIS elements.
+> - Examples follow the tested behaviour (fixtures and integration tests): e.g. `inet` / `macaddr` normalization, `withoutNullElements()` SQL, empty-value semantics of the operators, PostGIS filters needing the `$type` argument.
+> - Badges point to the GitHub repository (`andrecolza/laravel-pgarray`) and the Packagist package (`andreacolzani/laravel-pgarray`). The skeleton's "Support us", Spatie links and the missing `CONTRIBUTING.md` reference were removed; security reports go through GitHub security advisories.
+> - The CHANGELOG is finalized with the release (Milestone 18).
 
 ---
 
