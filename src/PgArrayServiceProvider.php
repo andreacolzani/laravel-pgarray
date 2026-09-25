@@ -3,6 +3,7 @@
 namespace AndreaColzani\PgArray;
 
 use AndreaColzani\PgArray\Commands\PgArrayCommand;
+use AndreaColzani\PgArray\Database\PgArraySchema;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
 use Illuminate\Contracts\Container\Container;
 use Spatie\LaravelPackageTools\Package;
@@ -34,5 +35,10 @@ class PgArrayServiceProvider extends PackageServiceProvider
                 $app->make('config')->get('pgarray.serializers', []),
             ),
         );
+    }
+
+    public function packageBooted(): void
+    {
+        PgArraySchema::register();
     }
 }

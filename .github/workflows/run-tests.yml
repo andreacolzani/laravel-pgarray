@@ -65,3 +65,71 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/pest --ci
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.5, 8.3]
+        laravel: [13.*, 12.*]
+        include:
+          - laravel: 13.*
+            testbench: 11.*
+          - laravel: 12.*
+            testbench: 10.*
+
+    name: PostgreSQL - P${{ matrix.php }} - L${{ matrix.laravel }}
+
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pgarray_testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGARRAY_DB_HOST: 127.0.0.1
+      PGARRAY_DB_PORT: 5432
+      PGARRAY_DB_DATABASE: pgarray_testing
+      PGARRAY_DB_USERNAME: postgres
+      PGARRAY_DB_PASSWORD: postgres
+      # Fail instead of skipping when PostgreSQL or an extension is missing.
+      PGARRAY_REQUIRE_DB: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install pgvector
+        run: |
+          docker exec ${{ job.services.postgres.id }} bash -c "apt-get update && apt-get install -y --no-install-recommends postgresql-17-pgvector"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pgsql, pdo_pgsql, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Execute PostgreSQL tests
+        run: vendor/bin/pest --ci --group=pgsql

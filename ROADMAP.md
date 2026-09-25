@@ -690,7 +690,7 @@ new PgArrayTypeDefinition(
 - [x] Support `vector(n)`.
 - [x] Support PostGIS type modifiers (`geometry(Point,4326)` / `geography(...)`).
 - [x] Add tests.
-- [ ] Integrate with migration helpers (moved to Milestone 12).
+- [x] Integrate with migration helpers (Milestone 12).
 - [x] Integrate with any other API that needs PostgreSQL type definitions (none yet: Eloquent casts are intentionally unaffected).
 
 Usage:
@@ -726,15 +726,9 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 12 — Migration helper
+## Milestone 12 — Migration helper [DONE]
 
-Provide a minimal migration API based around `pgArray()`.
-
-Target concept:
-
-```php
-$table->pgArray('tags', PgArrayType::String);
-```
+Provide a minimal migration API based around `pgArray()`, built on `Database\PgArrayTypeDefinition` (Milestone 11), with Laravel-style chained modifiers.
 
 Support:
 
@@ -753,16 +747,55 @@ vector(1536)[]
 
 ### Tasks
 
-- [ ] Design final `pgArray()` API (built on `Database\PgArrayTypeDefinition`, see Milestone 11).
-- [ ] Implement migration helper.
-- [ ] Support simple types.
-- [ ] Support parameterized types.
-- [ ] Support nullable.
-- [ ] Support defaults where appropriate.
-- [ ] Support alterations if feasible.
-- [ ] Support dropping arrays.
-- [ ] Test generated SQL.
-- [ ] Add PostgreSQL integration tests.
+- [x] Design final `pgArray()` API (built on `Database\PgArrayTypeDefinition`, see Milestone 11).
+- [x] Implement migration helper.
+- [x] Support simple types.
+- [x] Support parameterized types.
+- [x] Support nullable.
+- [x] Support defaults where appropriate.
+- [x] Support alterations if feasible.
+- [x] Support dropping arrays.
+- [x] Test generated SQL.
+- [x] Add PostgreSQL integration tests.
+
+Usage:
+
+```php
+use AndreaColzani\PgArray\Database\PgArrayTypeDefinition;
+use AndreaColzani\PgArray\Enums\PgArrayType;
+
+Schema::create('posts', function (Blueprint $table) {
+    $table->pgArray('tags', PgArrayType::Text);                                      // text[] not null
+    $table->pgArray('codes', PgArrayType::Varchar)->length(50)->nullable();          // varchar(50)[] null
+    $table->pgArray('skus', PgArrayTypeDefinition::varchar(20));                     // varchar(20)[]
+    $table->pgArray('prices', PgArrayType::Decimal)->precision(10, 2);               // decimal(10,2)[]
+    $table->pgArray('seen_at', PgArrayType::TimestampTz)->precision(6);              // timestamptz(6)[]
+    $table->pgArray('embeddings', PgArrayType::Vector)->size(1536);                  // vector(1536)[]
+    $table->pgArray('places', PgArrayType::Geography)->subtype('Point');             // geography(Point,4326)[]
+    $table->pgArray('areas', PgArrayType::Geometry)->subtype('Polygon')->srid(3857); // geometry(Polygon,3857)[]
+    $table->pgArray('matrix', PgArrayType::Integer)->dimensions(2)->default([[1, 2], [3, 4]]);
+    // integer[][] default '{{1,2},{3,4}}'::integer[][]
+    $table->pgArray('labels', PgArrayType::Text)->withoutNullElements()->default([]);
+    // text[] check (array_position("labels", NULL) is null) not null default '{}'::text[]
+});
+
+Schema::table('posts', function (Blueprint $table) {
+    $table->pgArray('prices', PgArrayType::Decimal)->precision(12, 2)->change();
+    $table->pgArray('codes', PgArrayType::Integer)->using('codes::integer[]')->change();
+    $table->dropColumn('tags');
+});
+```
+
+> **Design decisions:**
+> - `$table->pgArray(string $column, PgArrayType|PgArrayTypeDefinition $type)` is a `Blueprint` macro returning a `Database\PgArrayColumnDefinition` (a `ColumnDefinition`), so every native modifier (`nullable()`, `default()`, `comment()`, `after()`, `change()`, `using()`, ...) keeps working. It is registered by `Database\PgArraySchema::register()` in the service provider, together with a `typePgArray` grammar macro (Laravel compiles column types through `type{Type}()`); other drivers throw a `RuntimeException`.
+> - Type modifiers are chained, following Laravel naming: `length()` (char / varchar), `precision($precision, $scale = null)` (decimal / numeric, and fractional seconds of time / timetz / timestamp / timestamptz), `size()` (pgvector dimensions), `subtype()` / `srid()` (geometry / geography), `dimensions()` (array dimensions, `integer[][]`). Each modifier rebuilds the `PgArrayTypeDefinition`, so values are validated eagerly; a modifier not supported by the type throws an `InvalidArgumentException`. A `PgArrayTypeDefinition` can be passed instead, and chained modifiers override it.
+> - Spatial defaults follow Laravel's `geometry()` / `geography()` columns: no modifiers → `geometry[]` / `geography[]`; a geography subtype without SRID uses 4326; a SRID without subtype uses the generic `Geometry` subtype, as PostGIS requires.
+> - `nullable()` is the native column-level modifier (the column may be NULL). PostgreSQL cannot forbid NULL **elements** in the type itself, so `withoutNullElements()` adds a `check (array_position(col, NULL) is null)` column constraint. It is only supported by one-dimensional arrays (`array_position` does not support multidimensional arrays) and when creating or adding the column (a `RuntimeException` is thrown with `change()`: add the constraint separately).
+> - `default()` accepts PHP arrays and `Arrayable` values (Collections), rendered by `Database\PgArrayDefault` as an array literal cast to the column type (`'{a,b}'::text[]`) with `Support\PgArrayParser::serialize()`. The cast is rendered when the migration is compiled, so modifiers can be chained before or after `default()`. Elements can be scalars, `null`, nested arrays, `BackedEnum` and `Stringable`. Strings and `Expression` defaults keep Laravel's behaviour.
+> - Alterations use Laravel's `change()`: as for every column, the full definition must be restated. Casts PostgreSQL cannot apply implicitly need `->using(...)`; no `USING` clause is generated automatically.
+> - Dropping uses the native `dropColumn()`: no dedicated helper.
+> - PostgreSQL does not store the declared number of dimensions: `integer[][]` is introspected as `integer[]`.
+> - Integration tests (`tests/Integration`, group `pgsql`) use the `PGARRAY_DB_*` connection and are skipped when PostgreSQL (or an extension) is not available, unless `PGARRAY_REQUIRE_DB=true`. The `integration` job of `run-tests.yml` runs them on `postgis/postgis:17-3.5` with pgvector installed and `PGARRAY_REQUIRE_DB=true`, so CI never skips them.
 
 ### Checkpoint
 
