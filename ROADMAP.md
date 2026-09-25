@@ -965,7 +965,7 @@ The final matrix should reflect versions actually supported by the package and i
 > - `run-tests.yml` CI matrix:
 >   - `test` job: Ubuntu and Windows × PHP 8.3 / 8.4 / 8.5 × Laravel 12 / 13 × `prefer-lowest` / `prefer-stable`, excluding the `pgsql` group.
 >   - `integration` job: PHP 8.3 / 8.4 / 8.5 × Laravel 12 / 13 × `prefer-lowest` / `prefer-stable` on PostgreSQL 18 (PostGIS 3.6, pgvector), plus one combination each on PostgreSQL 15, 16 and 17 (PostGIS 3.5).
->   - PHP 8.6 (nightly build) runs as an experimental combination in both jobs (`continue-on-error`, `--ignore-platform-req=php+`) until its release.
+>   - PHP 8.6 (nightly build) runs as an experimental combination in both jobs (`continue-on-error`, `--ignore-platform-req=php+`) until its release. It runs with `display_errors=Off` and `log_errors=Off`: otherwise PHP prints the deprecations raised by third-party code (e.g. `spl_object_hash()` in Laravel 12) as test output, making tests risky (`failOnRisky`). Deprecations are still reported by Pest.
 >   - `fail-fast` stays enabled: the first failure cancels the run.
 
 ---

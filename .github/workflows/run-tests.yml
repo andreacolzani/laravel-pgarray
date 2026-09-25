@@ -64,6 +64,9 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
+          # PHP prints the deprecations of third-party code (e.g. Laravel 12 on PHP 8.6) as unexpected
+          # test output, making tests risky: they are still reported by Pest, without failing the job.
+          ini-values: ${{ matrix.experimental && 'display_errors=Off, log_errors=Off' || '' }}
 
       - name: Setup problem matchers
         run: |
@@ -168,6 +171,9 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pgsql, pdo_pgsql, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
+          # PHP prints the deprecations of third-party code (e.g. Laravel 12 on PHP 8.6) as unexpected
+          # test output, making tests risky: they are still reported by Pest, without failing the job.
+          ini-values: ${{ matrix.experimental && 'display_errors=Off, log_errors=Off' || '' }}
 
       - name: Setup problem matchers
         run: |
