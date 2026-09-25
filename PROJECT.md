@@ -47,6 +47,7 @@ Alla fine dell'ultima fase di sviluppo:
 - `EncryptedCaster`: cifratura a livello di elemento come decorator del caster risolto per qualsiasi tipo, dichiarata con `AsPgArray::encrypted(...)` (`AsPgArray:<type>,<container>,encrypted`) o `AsEncryptedArray`; usa `Model::currentEncrypter()`, richiede colonne `text[]` (Milestone 8)
 - `HashedCaster` (`PgArrayCast::Hashed`) + `AsHashedArray`: hashing a livello di elemento con `Hash::make()`, gli hash esistenti non vengono ri-hashati; verifica tramite `Support\PgArrayHash::check()` / `find()` (Milestone 9)
 - tipi PostgreSQL speciali (Milestone 10): `ByteaCaster` (stringa binaria ↔ formato hex), `InetCaster` e `MacAddrCaster` (validazione + normalizzazione), `VectorCaster` + `Types\Vector` per `vector[]` pgvector (dimensioni opzionali con `AsVectorArray::withDimensions()`), `GeometryCaster` passthrough per `geometry[]` / `geography[]` + `Types\Point` (`PgArrayValue`, EWKT in scrittura, EWKB in lettura) consigliato per i punti; il resolver accetta anche un `PgArrayValueCaster` già configurato
+- `Database\PgArrayTypeDefinition` (Milestone 11): definizione a livello DB di un `PgArrayType` con type modifier validati (`varchar(n)`, `char(n)`, `decimal(p,s)` / `numeric(p,s)`, precisione temporale, `vector(n)`, `geometry` / `geography(subtype, srid)`), con rendering `toSql()` / `toArraySql()`; non influenza i cast Eloquent, verrà usata dalle migration (Milestone 12)
 - `EnumCaster`: supporto automatico ai `BackedEnum` (string/int) via `AsPgArray::of(Status::class)`; pure enum rifiutati con `UnsupportedElementException::pureEnum()` (Milestone 4)
 - castable specifici implementati per: Boolean, Integer, String, Decimal, Float, Double, Real, Stringable, Date, DateTime, ImmutableDate, ImmutableDateTime, Uri, Ulid, Uuid
 - container `array` e `Collection` supportati
@@ -200,6 +201,9 @@ Enums/
 
 Support/
     PgArrayParser
+
+Database/
+    PgArrayTypeDefinition
 
 Types/
     Vector   (pgvector)
@@ -2055,6 +2059,6 @@ Quando riprenderemo il progetto in una nuova conversazione, mantenere queste reg
 
 Il prossimo punto naturale da cui ripartire è:
 
-> **Tutti i Laravel value casts e castability sono completati** (Boolean, Integer, String, Decimal, Double, Float, Real, Date, DateTime, ImmutableDate, ImmutableDateTime, Stringable, Uri, Ulid, Uuid). I prossimi step architetturali sono quelli descritti in ROADMAP.md Milestones 3-6: element caster resolver (Milestone 3, done), automatic `BackedEnum` support (Milestone 4, done), `PgArrayValue` contract (Milestone 5, done), and JSON/JSONB object serialization (Milestone 6, done), external serializers (Milestone 7, done), element-level encryption (Milestone 8, done), element-level hashing (Milestone 9, done) and special PostgreSQL types (Milestone 10, done). Next: parameterized PostgreSQL types (Milestone 11). ROADMAP.md remains the source of truth for expected behavior and next milestones.
+> **Tutti i Laravel value casts e castability sono completati** (Boolean, Integer, String, Decimal, Double, Float, Real, Date, DateTime, ImmutableDate, ImmutableDateTime, Stringable, Uri, Ulid, Uuid). I prossimi step architetturali sono quelli descritti in ROADMAP.md Milestones 3-6: element caster resolver (Milestone 3, done), automatic `BackedEnum` support (Milestone 4, done), `PgArrayValue` contract (Milestone 5, done), and JSON/JSONB object serialization (Milestone 6, done), external serializers (Milestone 7, done), element-level encryption (Milestone 8, done), element-level hashing (Milestone 9, done), special PostgreSQL types (Milestone 10, done) and parameterized PostgreSQL types (Milestone 11, done). Next: migration helper (Milestone 12). ROADMAP.md remains the source of truth for expected behavior and next milestones.
 
 Questo documento descrive l'architettura e le decisioni prese finora; **le classi presenti nel repository/worktree dell'utente restano la source of truth per l'implementazione effettiva**.

@@ -656,7 +656,7 @@ Run the standard suite and commit each logical group.
 
 ---
 
-## Milestone 11 — Parameterized PostgreSQL types
+## Milestone 11 — Parameterized PostgreSQL types [DONE]
 
 Enums alone are insufficient for:
 
@@ -680,17 +680,45 @@ new PgArrayTypeDefinition(
 
 ### Tasks
 
-- [ ] Design `PgArrayTypeDefinition`.
-- [ ] Validate parameters.
-- [ ] Support type rendering.
-- [ ] Support `varchar(n)`.
-- [ ] Support `char(n)`.
-- [ ] Support `decimal(p,s)` / `numeric(p,s)`.
-- [ ] Support temporal precision.
-- [ ] Support `vector(n)`.
-- [ ] Add tests.
-- [ ] Integrate with migration helpers.
-- [ ] Integrate with any other API that needs PostgreSQL type definitions.
+- [x] Design `PgArrayTypeDefinition`.
+- [x] Validate parameters.
+- [x] Support type rendering.
+- [x] Support `varchar(n)`.
+- [x] Support `char(n)`.
+- [x] Support `decimal(p,s)` / `numeric(p,s)`.
+- [x] Support temporal precision.
+- [x] Support `vector(n)`.
+- [x] Support PostGIS type modifiers (`geometry(Point,4326)` / `geography(...)`).
+- [x] Add tests.
+- [ ] Integrate with migration helpers (moved to Milestone 12).
+- [x] Integrate with any other API that needs PostgreSQL type definitions (none yet: Eloquent casts are intentionally unaffected).
+
+Usage:
+
+```php
+use AndreaColzani\PgArray\Database\PgArrayTypeDefinition;
+
+PgArrayTypeDefinition::varchar(50)->toArraySql();              // varchar(50)[]
+PgArrayTypeDefinition::decimal(10, 2)->toSql();                // decimal(10,2)
+PgArrayTypeDefinition::timestampTz(6)->toArraySql();           // timestamptz(6)[]
+PgArrayTypeDefinition::vector(1536)->toArraySql();             // vector(1536)[]
+PgArrayTypeDefinition::geography('Point', 4326)->toArraySql(); // geography(Point,4326)[]
+PgArrayTypeDefinition::of(PgArrayType::Integer)->toArraySql(2); // integer[][]
+new PgArrayTypeDefinition(PgArrayType::Timestamp, [6]);        // timestamp(6)
+```
+
+> **Design decisions:**
+> - `Database\PgArrayTypeDefinition` is a database-level value object: a `PgArrayType` plus a list of type modifiers. It has a generic constructor `(PgArrayType $type, array $parameters = [])` and named constructors (`of()`, `char()`, `varchar()`, `decimal()`, `numeric()`, `time()`, `timeTz()`, `timestamp()`, `timestampTz()`, `vector()`, `geometry()`, `geography()`). All parameters are optional, as in PostgreSQL (`varchar`, `numeric` and `vector` without modifiers are valid).
+> - Rendering: `toSql()` (also `__toString()`) returns the element type. `toArraySql(int $dimensions = 1)` appends `[]` once per dimension. PostgreSQL does not enforce the declared number of dimensions.
+> - Validation (`InvalidArgumentException` naming the type), with limits as class constants:
+>   - `char` / `varchar`: length between 1 and 10485760.
+>   - `decimal` / `numeric`: precision between 1 and 1000, scale between 0 and precision. The portable rule is used: the negative scales and scales greater than precision that PostgreSQL 15+ allows are rejected. A scale without a precision is rejected.
+>   - `time` / `timetz` / `timestamp` / `timestamptz`: precision between 0 and 6.
+>   - `vector`: dimensions between 1 and 16000 (pgvector limit).
+>   - `geometry` / `geography`: `(subtype[, srid])`. The subtype is one of the PostGIS geometry types with an optional `Z` / `M` / `ZM` suffix, and its casing is normalized (`pointz` → `PointZ`). The SRID must be ≥ 0. With the named constructors, a SRID without a subtype uses `Geometry`, because PostGIS requires a subtype.
+>   - Every other type rejects parameters.
+> - Integer parameters must be real integers (no numeric strings), to catch configuration mistakes early.
+> - Scope: Eloquent casts are unchanged. Lengths, scales and precisions are enforced by PostgreSQL, and vector dimensions can already be validated with `AsVectorArray::withDimensions()`. There is no parsing from strings (`'varchar(50)[]'` → definition): it will be added only when a feature needs it, e.g. schema introspection.
 
 ### Checkpoint
 
@@ -725,7 +753,7 @@ vector(1536)[]
 
 ### Tasks
 
-- [ ] Design final `pgArray()` API.
+- [ ] Design final `pgArray()` API (built on `Database\PgArrayTypeDefinition`, see Milestone 11).
 - [ ] Implement migration helper.
 - [ ] Support simple types.
 - [ ] Support parameterized types.
