@@ -2,7 +2,6 @@
 
 namespace AndreaColzani\PgArray;
 
-use AndreaColzani\PgArray\Commands\PgArrayCommand;
 use AndreaColzani\PgArray\Database\PgArrayQuery;
 use AndreaColzani\PgArray\Database\PgArraySchema;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
@@ -21,10 +20,7 @@ class PgArrayServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-pgarray')
-            ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel_pgarray_table')
-            ->hasCommand(PgArrayCommand::class);
+            ->hasConfigFile();
     }
 
     public function packageRegistered(): void
