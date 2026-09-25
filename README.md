@@ -1,22 +1,61 @@
 # Laravel PostgreSQL Arrays
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/andreacolzani/laravel-pgarray.svg?style=flat-square)](https://packagist.org/packages/andreacolzani/laravel-pgarray)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/andrecolza/laravel-pgarray/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/andrecolza/laravel-pgarray/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![PHPStan](https://img.shields.io/github/actions/workflow/status/andrecolza/laravel-pgarray/phpstan.yml?branch=main&label=phpstan&style=flat-square)](https://github.com/andrecolza/laravel-pgarray/actions?query=workflow%3APHPStan+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/andreacolzani/laravel-pgarray.svg?style=flat-square)](https://packagist.org/packages/andreacolzani/laravel-pgarray)
+<p>
+    <a href="https://packagist.org/packages/andreacolzani/laravel-pgarray"><img src="https://img.shields.io/packagist/v/andreacolzani/laravel-pgarray.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://github.com/andrecolza/laravel-pgarray/actions?query=workflow%3Arun-tests+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andrecolza/laravel-pgarray/run-tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
+    <a href="https://github.com/andrecolza/laravel-pgarray/actions?query=workflow%3APHPStan+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andrecolza/laravel-pgarray/phpstan.yml?branch=main&label=phpstan&style=flat-square" alt="PHPStan"></a>
+    <a href="https://packagist.org/packages/andreacolzani/laravel-pgarray"><img src="https://img.shields.io/packagist/dt/andreacolzani/laravel-pgarray.svg?style=flat-square" alt="Total Downloads"></a>
+</p>
+<p>
+    <a href="#compatibility"><img src="https://img.shields.io/badge/php-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.3+"></a>
+    <a href="#compatibility"><img src="https://img.shields.io/badge/laravel-12%20%7C%2013-FF2D20?style=flat-square&logo=laravel&logoColor=white" alt="Laravel 12 | 13"></a>
+    <a href="#compatibility"><img src="https://img.shields.io/badge/postgresql-15%2B-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL 15+"></a>
+</p>
 
-First-class support for PostgreSQL array columns (`text[]`, `integer[]`, `uuid[]`, `jsonb[]`, `vector[]`, …) in Laravel:
+<p align="center">
+    <img src="art/cover.png" alt="Laravel PostgreSQL Arrays" width="100%">
+</p>
 
-- **Eloquent casts** that parse and serialize PostgreSQL arrays correctly: quoting, escaping, `NULL` elements, empty strings and multidimensional arrays.
-- **Typed elements**: integers, decimals, floats, booleans, dates, UUIDs, ULIDs, backed enums, your own value objects and JSON objects.
-- **Element-level encryption and hashing**.
-- **PostgreSQL special types**: `bytea`, `inet`, `macaddr`, pgvector `vector`, PostGIS `geometry` / `geography`.
-- A **`pgArray()` migration helper** with type modifiers (`varchar(50)[]`, `numeric(10,2)[]`, `vector(1536)[]`, …).
-- **Query builder macros** for the array operators `@>`, `<@`, `&&` and `||`.
+## Introduction
+
+PostgreSQL can store a whole list of values in a single column: tags in a `text[]`, scores in an `integer[]`, references in a `uuid[]`. Laravel, however, has no built-in support for these columns, and turning `{php,"hello, world",NULL}` into a PHP array by hand is more error-prone than it looks.
+
+This package lets you use array columns as naturally as any other column. You add a cast to your model and work with plain PHP arrays (or Collections) of strings, numbers, dates, enums or your own objects. It also adds a `pgArray()` column type for migrations and query builder methods for PostgreSQL's array operators.
+
+## Installation
+
+Install the package with Composer:
+
+```bash
+composer require andreacolzani/laravel-pgarray
+```
+
+Make sure your PHP, Laravel and PostgreSQL versions are [supported](#compatibility).
+
+Optionally, you can publish the configuration file. You only need it to map [external serializers](#classes-you-cannot-modify):
+
+```bash
+php artisan vendor:publish --tag="laravel-pgarray-config"
+```
+
+## Quick start
+
+Let's give blog posts a list of tags and a list of scores. First, create the columns in a migration:
+
+```php
+use AndreaColzani\PgArray\Enums\PgArrayType;
+
+Schema::create('posts', function (Blueprint $table) {
+    $table->id();
+    $table->pgArray('tags', PgArrayType::Text)->default([]);     // text[] default '{}'
+    $table->pgArray('scores', PgArrayType::Integer)->nullable(); // integer[] null
+});
+```
+
+Then tell the model how to cast them:
 
 ```php
 use AndreaColzani\PgArray\Casts\AsIntegerArray;
-use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\AsStringArray;
 
 class Post extends Model
@@ -24,179 +63,76 @@ class Post extends Model
     protected function casts(): array
     {
         return [
-            'tags' => AsStringArray::class,           // text[]    → ['php', 'laravel']
-            'scores' => AsIntegerArray::collect(),    // integer[] → Collection([1, 2, 3])
-            'statuses' => AsPgArray::of(Status::class), // text[]  → [Status::Draft, ...]
+            'tags' => AsStringArray::class,
+            'scores' => AsIntegerArray::class,
         ];
     }
 }
-
-Post::query()->wherePgArrayContains('tags', ['php', 'laravel'])->get();
 ```
 
-## Contents
-
-- [Installation](#installation)
-- [Basic usage](#basic-usage)
-- [Built-in casts](#built-in-casts)
-- [Collections](#collections)
-- [Multidimensional arrays](#multidimensional-arrays)
-- [Enums](#enums)
-- [Custom value objects](#custom-value-objects)
-- [JSON / JSONB](#json--jsonb)
-- [External serializers](#external-serializers)
-- [Dates and time zones](#dates-and-time-zones)
-- [Encrypted arrays](#encrypted-arrays)
-- [Hashed arrays](#hashed-arrays)
-- [PostgreSQL special types](#postgresql-special-types)
-- [Migrations](#migrations)
-- [Query builder](#query-builder)
-- [Exceptions](#exceptions)
-- [Supported PostgreSQL types](#supported-postgresql-types)
-- [PHP / Laravel compatibility](#php--laravel-compatibility)
-- [Testing](#testing)
-- [License](#license)
-
-## Installation
-
-Install the package via Composer:
-
-```bash
-composer require andreacolzani/laravel-pgarray
-```
-
-The service provider is discovered automatically. It registers the `pgArray()` migration helper and the query builder macros.
-
-The configuration file is only needed to map [external serializers](#external-serializers). Publish it with:
-
-```bash
-php artisan vendor:publish --tag="laravel-pgarray-config"
-```
-
-## Basic usage
-
-Add a cast to the model for each array column:
+That's it: you can now read and write the columns as arrays, and query them.
 
 ```php
-use AndreaColzani\PgArray\Casts\AsIntegerArray;
+$post = Post::create([
+    'tags' => ['php', 'laravel'],
+    'scores' => [10, 20, null],
+]);
 
-protected function casts(): array
-{
-    return [
-        'scores' => AsIntegerArray::class,
-    ];
-}
+$post->tags;   // ['php', 'laravel']
+$post->scores; // [10, 20, null]
+
+$laravelPosts = Post::wherePgArrayContains('tags', 'laravel')->get();
 ```
+
+## Available casts
+
+Pick the cast that matches the type of the elements. All casts live in the `AndreaColzani\PgArray\Casts` namespace.
+
+| Cast | PHP elements | Column |
+|---|---|---|
+| `AsStringArray` | `string` | `text[]`, `varchar[]`, `char[]` |
+| `AsIntegerArray` | `int` | `integer[]`, `smallint[]`, `bigint[]` |
+| `AsDecimalArray` | `string` | `numeric[]`, `decimal[]` |
+| `AsFloatArray`, `AsDoubleArray` | `float` | `double precision[]` |
+| `AsRealArray` | `float` | `real[]` |
+| `AsBooleanArray` | `bool` | `boolean[]` |
+| `AsDateArray`, `AsImmutableDateArray` | Carbon | `date[]` |
+| `AsDateTimeArray`, `AsImmutableDateTimeArray` | Carbon | `timestamp[]`, `timestamptz[]` |
+| `AsUuidArray` | `Ramsey\Uuid\UuidInterface` | `uuid[]` |
+| `AsUlidArray` | `Symfony\Component\Uid\Ulid` | `text[]` |
+| `AsStringableArray` | `Illuminate\Support\Stringable` | `text[]` |
+| `AsUriArray` | `Illuminate\Support\Uri` | `text[]` |
+
+Decimals are returned as strings on purpose, so that no precision is lost along the way. There are also casts for `bytea`, `inet`, `macaddr`, pgvector and PostGIS columns, described in [Special PostgreSQL types](#special-postgresql-types).
+
+If you prefer working with Collections, every cast has a `collect()` method:
 
 ```php
-$post->scores = [10, 20, null, 30];
-$post->save();                    // stored as {10,20,NULL,30}
+'scores' => AsIntegerArray::collect(),
 
-$post->fresh()->scores;           // [10, 20, null, 30]
+$post->scores->sum(); // 30
 ```
 
-The same cast can be written with the generic `AsPgArray` cast, which accepts any element type:
+Multidimensional arrays need no configuration at all: assign `[[1, 2], [3, 4]]` to an `integer[][]` column and you will get the same nested array back. `NULL` elements are preserved as `null`, and an empty array is stored as `{}`, so what you read is always what you wrote.
+
+## Enums, value objects and JSON
+
+When the built-in casts are not enough, `AsPgArray::of()` accepts any element type: a built-in cast, a backed enum or one of your own classes. You can pass `PgArrayContainer::Collection` as second argument to get a Collection.
 
 ```php
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
-
-'scores' => AsPgArray::of(PgArrayCast::Integer),
-```
-
-The package keeps PostgreSQL semantics:
-
-- a `NULL` column is `null`, an empty array (`{}`) is `[]`;
-- `NULL` elements are `null`, while the strings `'NULL'` and `''` are kept as strings;
-- quotes, backslashes, braces, commas, whitespace and Unicode are escaped and parsed correctly.
-
-`AsPgArray` without arguments (`'tags' => AsPgArray::class`) is a string array.
-
-## Built-in casts
-
-Every built-in cast is available as a dedicated castable and as a `PgArrayCast` case:
-
-| Castable | `PgArrayCast` | PHP element | Typical column |
-|---|---|---|---|
-| `AsStringArray` | `String` | `string` | `text[]`, `varchar[]`, `char[]`, `time[]`, `timetz[]` |
-| `AsStringableArray` | `Stringable` | `Illuminate\Support\Stringable` | `text[]` |
-| `AsIntegerArray` | `Integer` | `int` | `smallint[]`, `integer[]`, `bigint[]` |
-| `AsDecimalArray` | `Decimal` | `string` (exact) | `numeric[]`, `decimal[]` |
-| `AsFloatArray` | `Float` | `float` | `double precision[]` |
-| `AsDoubleArray` | `Double` | `float` | `double precision[]` |
-| `AsRealArray` | `Real` | `float` | `real[]` |
-| `AsBooleanArray` | `Boolean` | `bool` | `boolean[]` |
-| `AsDateArray` | `Date` | `Carbon\Carbon` | `date[]` |
-| `AsImmutableDateArray` | `ImmutableDate` | `Carbon\CarbonImmutable` | `date[]` |
-| `AsDateTimeArray` | `DateTime` | `Carbon\Carbon` | `timestamp[]`, `timestamptz[]` |
-| `AsImmutableDateTimeArray` | `ImmutableDateTime` | `Carbon\CarbonImmutable` | `timestamp[]`, `timestamptz[]` |
-| `AsUuidArray` | `Uuid` | `Ramsey\Uuid\UuidInterface` | `uuid[]` |
-| `AsUlidArray` | `Ulid` | `Symfony\Component\Uid\Ulid` | `char(26)[]`, `text[]` |
-| `AsUriArray` | `Uri` | `Illuminate\Support\Uri` | `text[]` |
-| `AsByteaArray` | `Bytea` | `string` (binary) | `bytea[]` |
-| `AsInetArray` | `Inet` | `string` | `inet[]` |
-| `AsMacAddrArray` | `MacAddr` | `string` | `macaddr[]` |
-| `AsVectorArray` | `Vector` | `AndreaColzani\PgArray\Types\Vector` | `vector[]` |
-| `AsGeometryArray` | `Geometry` | `string` (hex EWKB) | `geometry[]` |
-| `AsGeographyArray` | `Geography` | `string` (hex EWKB) | `geography[]` |
-| `AsEncryptedArray` | — | `string` | `text[]` |
-| `AsHashedArray` | `Hashed` | `string` (hash) | `text[]` |
-
-All castables live in the `AndreaColzani\PgArray\Casts` namespace.
-
-A few notes on numbers:
-
-- Decimals are strings, so no precision is lost (`'12.50'` stays `'12.50'`).
-- Floats are written with the shortest representation that round trips (`0.1 + 0.2` is stored as `0.30000000000000004`). `NAN`, `INF` and `-INF` are stored as `NaN`, `Infinity` and `-Infinity` and read back as such.
-- `real` is single precision in PostgreSQL: values read back may differ slightly from the assigned ones.
-
-Values assigned to an array are converted by the element cast: numeric strings become integers, Carbon instances and date strings become dates, `UuidInterface` / `Ulid` / `Stringable` objects become strings, and so on.
-
-## Collections
-
-Every castable has a `collect()` method, which retrieves the array as an `Illuminate\Support\Collection`:
-
-```php
-use AndreaColzani\PgArray\Casts\AsIntegerArray;
-
-'scores' => AsIntegerArray::collect(),
-```
-
-```php
-$post->scores;                 // Collection([10, 20, 30])
-$post->scores->sum();          // 60
-
-$post->scores = collect([1, 2, 3]);   // Collections can be assigned
-$post->scores = [1, 2, 3];            // … and so can arrays
-```
-
-With `AsPgArray`, pass the container as second argument:
-
-```php
-use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 
-'scores' => AsPgArray::of(PgArrayCast::Integer, PgArrayContainer::Collection),
+'scores' => AsPgArray::of(PgArrayCast::Integer),  // same as AsIntegerArray::class
+'statuses' => AsPgArray::of(Status::class),       // a backed enum
+'emails' => AsPgArray::of(Email::class),          // a value object
+'addresses' => AsPgArray::of(Address::class, PgArrayContainer::Collection), // JSON objects
 ```
 
-Only the top level is a Collection: the inner dimensions of a multidimensional array stay plain arrays.
+### Backed enums
 
-## Multidimensional arrays
-
-Multidimensional arrays work with every cast, in both directions:
-
-```php
-'matrix' => AsIntegerArray::class, // integer[][] column
-
-$model->matrix = [[1, 2], [3, 4]];  // stored as {{1,2},{3,4}}
-$model->matrix;                     // [[1, 2], [3, 4]]
-```
-
-Element casts are applied recursively to every element. PostgreSQL requires multidimensional arrays to be rectangular: sub-arrays with different lengths are rejected by the database.
-
-## Enums
-
-Backed enums are supported automatically:
+Backed enums work out of the box. You can assign either enum cases or their raw values, and you always get cases back. Use a `text[]` column for string-backed enums and an `integer[]` column for int-backed ones.
 
 ```php
 enum Status: string
@@ -204,43 +140,21 @@ enum Status: string
     case Draft = 'draft';
     case Published = 'published';
 }
+
+$post->statuses = [Status::Draft, 'published'];
+$post->statuses; // [Status::Draft, Status::Published]
 ```
 
-```php
-'statuses' => AsPgArray::of(Status::class),                               // text[]
-'statuses' => AsPgArray::of(Status::class, PgArrayContainer::Collection), // Collection
-```
+### Value objects
 
-```php
-$post->statuses = [Status::Draft, 'published']; // cases or backing values
-$post->save();                                  // stored as {draft,published}
-
-$post->fresh()->statuses;                       // [Status::Draft, Status::Published]
-```
-
-- String-backed enums use `text[]` columns, int-backed enums `integer[]` (or `smallint[]` / `bigint[]`).
-- Values that do not match a case throw an `InvalidValueException`, both when assigning and when reading.
-- Pure enums (without backing values) are not supported.
-
-## Custom value objects
-
-Implement `PgArrayValue` to use your own classes as elements. The class converts itself to a **logical PHP value** and back: quoting and escaping are handled by the package.
+To store your own class, implement the `PgArrayValue` contract. It has two methods: one turns the object into a simple value to store, the other rebuilds the object from it. The package takes care of quoting and escaping.
 
 ```php
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
 
 final class Email implements PgArrayValue
 {
-    public readonly string $address;
-
-    public function __construct(string $address)
-    {
-        if (filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
-            throw new InvalidArgumentException("Invalid email address [{$address}].");
-        }
-
-        $this->address = strtolower($address);
-    }
+    public function __construct(public readonly string $address) {}
 
     public function toPgArrayValue(): string
     {
@@ -254,21 +168,9 @@ final class Email implements PgArrayValue
 }
 ```
 
-```php
-'emails' => AsPgArray::of(Email::class), // text[]
+### JSON objects
 
-$user->emails = [new Email('Taylor@example.com'), 'dayle@example.com'];
-$user->emails; // [Email('taylor@example.com'), Email('dayle@example.com')]
-```
-
-- `toPgArrayValue()` returns a scalar (`string`, `int`, `float`, `bool`) or `null`. To store structured values, use [JSON elements](#json--jsonb).
-- `fromPgArrayValue()` receives the element as text, as read from PostgreSQL. It is never called with `null`: `NULL` elements stay `null`.
-- Raw values assigned to the array (such as `'dayle@example.com'` above) go through `fromPgArrayValue()`, so the class validates them. Objects of other classes are rejected.
-- A backed enum implementing `PgArrayValue` uses the contract instead of the automatic enum support.
-
-## JSON / JSONB
-
-PostgreSQL `json[]` / `jsonb[]` columns are arrays whose elements are JSON values. Implement the `PgArrayJsonValue` marker contract to store objects as JSON elements:
+Objects with several properties fit naturally in a `json[]` or `jsonb[]` column, where every element is a JSON document. Implement `PgArrayJsonValue` and add the `InteractsWithPgArrayJson` trait: it stores the object's properties and rebuilds the object through its constructor, so you don't have to write any serialization code.
 
 ```php
 use AndreaColzani\PgArray\Concerns\InteractsWithPgArrayJson;
@@ -281,513 +183,141 @@ final class Address implements PgArrayJsonValue
     public function __construct(
         public readonly string $street,
         public readonly string $city,
-        public readonly ?Country $country = null, // a backed enum
+        public readonly string $country,
     ) {}
 }
-```
 
-```php
-'addresses' => AsPgArray::of(Address::class), // json[] or jsonb[]
-
-$user->addresses = [
-    new Address('Via Roma 1', 'Milano', Country::Italy),
-    new Address('Main Street 10', 'Springfield'),
+$customer->addresses = [
+    new Address('350 Fifth Avenue', 'New York', 'US'),
+    new Address('1 Chome-1-2 Oshiage', 'Tokyo', 'JP'),
 ];
-// each element is stored as a JSON object: {"street":"Via Roma 1","city":"Milano","country":"it"}
 
-$user->addresses[0]->city; // 'Milano'
+$customer->addresses[1]->city; // 'Tokyo'
 ```
 
-The optional `InteractsWithPgArrayJson` trait provides a default implementation:
+### Classes you cannot modify
 
-- `toPgArrayValue()` returns the object's properties by name. Nested `PgArrayValue` objects are converted through their own contract.
-- `fromPgArrayValue()` passes the matching keys to the constructor as named arguments, restoring nested `PgArrayValue` objects and backed enums from the parameter types. Unknown keys are ignored, so stored elements keep working after a property is removed.
-
-You can override either method, or implement both yourself without the trait:
+Sometimes the class you want to store belongs to another package, so you cannot make it implement a contract. In that case, write a serializer implementing `PgArrayValueSerializer` and map the class to it in the [configuration file](#installation):
 
 ```php
-final class Address implements PgArrayJsonValue
-{
-    public function __construct(
-        public readonly string $street,
-        public readonly string $city,
-    ) {}
-
-    public function toPgArrayValue(): array
-    {
-        return ['street' => $this->street, 'city' => $this->city];
-    }
-
-    public static function fromPgArrayValue(mixed $value): static
-    {
-        return new static($value['street'], $value['city']);
-    }
-}
-```
-
-`fromPgArrayValue()` receives the decoded JSON value, with objects decoded as associative arrays. SQL `NULL` elements and JSON `null` elements are both read as `null`. Invalid JSON throws a `JsonException`.
-
-## External serializers
-
-When a class cannot implement the contracts (for example, a class of another package), or several classes share the same serialization rules, map the class to an external serializer:
-
-```php
-use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
-
-final class MoneySerializer implements PgArrayValueSerializer
-{
-    public function serialize(object $value): mixed
-    {
-        return $value->getAmount().' '.$value->getCurrency();  // '1250 EUR'
-    }
-
-    public function deserialize(mixed $value, string $class): object
-    {
-        [$amount, $currency] = explode(' ', $value);
-
-        return new $class($amount, $currency);
-    }
-}
-```
-
-There are three ways to map a serializer, in order of precedence:
-
-```php
-// 1. config/pgarray.php: classes you cannot modify
+// config/pgarray.php
 'serializers' => [
     Money::class => MoneySerializer::class,
 ],
-
-// 2. The attribute, for classes you own
-use AndreaColzani\PgArray\Attributes\PgArraySerializer;
-
-#[PgArraySerializer(SkuSerializer::class)]
-final class Sku { /* … */ }
-
-// 3. The PgArraySerializable contract
-use AndreaColzani\PgArray\Contracts\PgArraySerializable;
-
-final class CountryCode implements PgArraySerializable
-{
-    public static function pgArraySerializer(): string
-    {
-        return StringValueSerializer::class;
-    }
-}
 ```
 
-Serializers can also be registered from a service provider:
+The cast itself doesn't change: `AsPgArray::of(Money::class)`. For classes you own, the `#[PgArraySerializer(MoneySerializer::class)]` attribute is a handy alternative to the configuration.
 
-```php
-use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
+## Encrypted and hashed arrays
 
-$this->app->make(PgArraySerializerRegistry::class)
-    ->register([Money::class, Price::class], MoneySerializer::class);
-```
-
-The cast definition does not change: `'prices' => AsPgArray::of(Money::class)`.
-
-- `serialize()` returns a scalar or `null`. Implement the `PgArrayJsonSerializer` marker contract instead to store structured values in `json[]` / `jsonb[]` columns.
-- `deserialize()` receives the target class, so one serializer can serve several classes. It must return an instance of that class and is never called with `null`.
-- Classes are matched by exact name: subclasses and interfaces are not matched.
-- A serializer takes precedence over `PgArrayValue`, `PgArrayJsonValue` and the automatic enum support, so you can change how existing value objects or third-party enums are stored.
-- Serializers are resolved through the container, so they can use dependency injection.
-
-## Dates and time zones
-
-`AsDateArray` and `AsImmutableDateArray` write dates as `Y-m-d`.
-
-`AsDateTimeArray` and `AsImmutableDateTimeArray` write date-times as `Y-m-d H:i:s.uP`, **with microseconds and the UTC offset**:
-
-```php
-$event->starts_at = [Carbon::parse('2026-08-20 14:30', 'Europe/Rome')];
-// stored as {"2026-08-20 14:30:00.000000+02:00"}
-```
-
-This differs from Laravel's `datetime` cast, which writes `Grammar::getDateFormat()` (`Y-m-d H:i:s`, or the model's `$dateFormat`) without an offset, and without microseconds. Array casts ignore `$dateFormat`.
-
-- **When the PostgreSQL session time zone matches the application time zone** (the configuration Laravel expects) and your Carbon instances are in the application time zone, the results are the same as with Laravel's `datetime` cast.
-- **When they differ, values stay correct.** Without an offset, PostgreSQL reads a `timestamptz` value in the session time zone, silently shifting it. With the offset, `timestamptz[]` columns store the exact instant whatever the session time zone. `timestamp[]` columns (without time zone) ignore the offset and keep the wall-clock time of the instance, as Laravel does.
-- **Values read from `timestamptz[]` columns are converted to the application time zone** (`app.timezone`), while Laravel's `Date::parse()` keeps a fixed offset such as `+02:00`.
-- The raw attribute (`$model->getAttributes()`) contains the offset.
-- Query builder operators format `DateTimeInterface` elements in the same way.
-
-It is still a good idea to set the `timezone` of the `pgsql` connection to the application time zone, for Laravel's native (non-array) date columns:
-
-```php
-// config/database.php
-'pgsql' => [
-    // …
-    'timezone' => env('DB_TIMEZONE', 'UTC'), // same as app.timezone
-],
-```
-
-## Encrypted arrays
-
-Encrypted arrays encrypt **each element separately**, with the application encrypter:
+Sensitive values can be encrypted or hashed **one element at a time**. Unlike Laravel's `encrypted:array` cast, which turns the whole array into a single encrypted string, the column stays a real PostgreSQL array. Ciphertexts and hashes are strings, so these casts need a `text[]` column.
 
 ```php
 use AndreaColzani\PgArray\Casts\AsEncryptedArray;
-
-'secrets' => AsEncryptedArray::class,           // text[] of encrypted strings
-'secrets' => AsEncryptedArray::collect(),
-```
-
-Any element type can be encrypted with `AsPgArray::encrypted()`:
-
-```php
-'pins' => AsPgArray::encrypted(PgArrayCast::Integer),
-'birthdays' => AsPgArray::encrypted(PgArrayCast::Date, PgArrayContainer::Collection),
-'statuses' => AsPgArray::encrypted(Status::class),
-'addresses' => AsPgArray::encrypted(Address::class),
-```
-
-- The element is converted by its cast first, then encrypted; on read, it is decrypted and then converted.
-- Ciphertexts are strings, so encrypted arrays always need `text[]` (or `varchar[]`) columns, whatever the element type.
-- The array structure stays visible: dimensions, length and `NULL` elements are not encrypted. Every other element gets its own IV, so equal values produce different ciphertexts.
-- This is different from Laravel's `encrypted:array` cast, which encrypts the whole array as a single JSON payload. Use the native cast when the structure must be hidden too.
-- Encryption uses `Model::currentEncrypter()`, so `Model::encryptUsing()` and previous keys (`APP_PREVIOUS_KEYS`) work as with Laravel's encrypted casts. Invalid payloads throw Laravel's `DecryptException`.
-
-## Hashed arrays
-
-Hashed arrays hash each element with the configured hasher, like Laravel's `hashed` cast does for a single value. Hashing is one-way: elements are read back as hashes.
-
-```php
 use AndreaColzani\PgArray\Casts\AsHashedArray;
 
-'recovery_codes' => AsHashedArray::class, // text[]
+'secrets' => AsEncryptedArray::class,                 // encrypted strings
+'pins' => AsPgArray::encrypted(PgArrayCast::Integer), // any element type can be encrypted
+'recovery_codes' => AsHashedArray::class,             // hashed values
 ```
 
-```php
-$user->recovery_codes = ['alpha-123', 'bravo-456']; // stored as hashes
-```
-
-Verify values with `PgArrayHash`:
+Encrypted values are decrypted transparently when you read them. Hashes, on the other hand, cannot be reversed, so you check a value against them with `PgArrayHash`. This is handy for one-time recovery codes:
 
 ```php
 use AndreaColzani\PgArray\Support\PgArrayHash;
 
-PgArrayHash::check($code, $user->recovery_codes);     // bool
-
-// Remove a consumed recovery code
-$key = PgArrayHash::find($code, $user->recovery_codes); // int|string|null
-
-if ($key !== null) {
-    $codes = $user->recovery_codes;
-    unset($codes[$key]);
-    $user->recovery_codes = array_values($codes);
-    $user->save();
+if (PgArrayHash::check($code, $user->recovery_codes)) {
+    // the code is valid
 }
+
+// find() returns the key of the matching hash, so a used code can be removed
+$key = PgArrayHash::find($code, $user->recovery_codes);
 ```
 
-- Values that are already hashed are stored unchanged, so the hashes read from the database can be assigned again (as above) without being hashed twice. They must match the configured hashing algorithm.
-- Strings, integers, floats and `Stringable` objects are accepted. `NULL` elements stay `NULL`.
-- `PgArrayHash` accepts arrays, Collections and `null`, and only checks top-level string elements.
+## Special PostgreSQL types
 
-## PostgreSQL special types
+The package also supports a few PostgreSQL-specific types. `AsByteaArray` stores binary strings in `bytea[]` columns, while `AsInetArray` and `AsMacAddrArray` validate IP and MAC addresses and normalize them the way PostgreSQL does.
 
-### `bytea`
-
-```php
-'files' => AsByteaArray::class, // bytea[]
-
-$model->files = [file_get_contents('logo.png')];
-```
-
-Assigned strings are raw binary data, stored in the hex format (`\x89504e47…`). Both the hex and the legacy `escape` output formats are decoded when reading.
-
-### `inet` and `macaddr`
-
-```php
-'ips' => AsInetArray::class,     // inet[]
-'macs' => AsMacAddrArray::class, // macaddr[]
-
-$model->ips = ['192.168.0.1', '2001:0DB8::1/64', '10.0.0.1/32'];
-$model->ips;  // ['192.168.0.1', '2001:db8::1/64', '10.0.0.1']
-
-$model->macs = ['08-00-2B-01-02-03', '0800.2b01.0203'];
-$model->macs; // ['08:00:2b:01:02:03', '08:00:2b:01:02:03']
-```
-
-Values are validated when assigned and normalized as PostgreSQL outputs them: IPv4 or IPv6 addresses with an optional prefix (IPv6 compressed and lowercase, full-length prefixes omitted), and every MAC address format accepted by PostgreSQL.
-
-### pgvector `vector`
-
-Requires the [pgvector](https://github.com/pgvector/pgvector) extension.
+With the [pgvector](https://github.com/pgvector/pgvector) extension, `AsVectorArray` stores embeddings as `Vector` objects, optionally checking their dimensions. With [PostGIS](https://postgis.net), the `Point` value object handles `geometry[]` and `geography[]` columns, and `AsGeometryArray` / `AsGeographyArray` pass any other geometry through as a string. See [Compatibility](#compatibility) for how to enable these extensions.
 
 ```php
 use AndreaColzani\PgArray\Casts\AsVectorArray;
+use AndreaColzani\PgArray\Types\Point;
 use AndreaColzani\PgArray\Types\Vector;
 
-'chunks' => AsVectorArray::class,              // vector[]
-'chunks' => AsVectorArray::withDimensions(1536), // validates the dimensions of every element
+'embeddings' => AsVectorArray::withDimensions(1536),
+'locations' => AsPgArray::of(Point::class),
 
-$model->chunks = [new Vector([0.12, -0.5, 0.33])];
-
-$vector = $model->chunks[0];
-$vector->toArray();    // [0.12, -0.5, 0.33]
-$vector->dimensions(); // 3
-(string) $vector;      // '[0.12,-0.5,0.33]'
+$document->embeddings = [new Vector([0.12, -0.5, 0.33, /* … */])];
+$store->locations = [new Point(latitude: 51.5072, longitude: -0.1276)]; // London
 ```
-
-Elements are `Vector` objects rather than plain lists, because PHP arrays are dimensions of the PostgreSQL array. `Vector` is immutable, `Countable`, `Stringable` (pgvector format) and `JsonSerializable` (plain list). pgvector stores single-precision floats, so values read back may differ slightly from the assigned ones.
-
-`AsVectorArray::withDimensions()` accepts a container as second argument: `AsVectorArray::withDimensions(1536, PgArrayContainer::Collection)`.
-
-### PostGIS `geometry` and `geography`
-
-Requires the [PostGIS](https://postgis.net) extension. The package does not parse geometries: `AsGeometryArray` and `AsGeographyArray` read them as the hex EWKB strings returned by PostgreSQL, and write WKT, EWKT or hex EWKB strings unchanged.
-
-```php
-'areas' => AsGeographyArray::class, // geography[]
-
-$model->areas = ['SRID=4326;POLYGON((9.1 45.4, 9.2 45.4, 9.2 45.5, 9.1 45.4))'];
-$model->areas; // ['0103000020E6100000…']
-```
-
-Points are best handled with the `Point` value object:
-
-```php
-use AndreaColzani\PgArray\Types\Point;
-
-'locations' => AsPgArray::of(Point::class), // geometry[] or geography[]
-
-$model->locations = [new Point(latitude: 45.4642, longitude: 9.19)]; // SRID 4326 by default
-
-$model->locations[0]->latitude;  // 45.4642
-$model->locations[0]->srid;      // 4326
-json_encode($model->locations[0]); // GeoJSON: {"type":"Point","coordinates":[9.19,45.4642]}
-```
-
-`Point` writes EWKT (`SRID=4326;POINT(9.19 45.4642)`) and reads 2D EWKB, WKT and EWKT. Richer geometries, or objects of GIS libraries, can be mapped with an [external serializer](#external-serializers).
-
-> [!NOTE]
-> PostGIS separates array elements with `:` instead of `,` (`{0101…:0101…}`). The casts handle it automatically. For custom elements stored in PostGIS arrays, implement `Contracts\PgArrayDelimited` on the value object or the serializer. For the query builder, see [below](#postgis-arrays).
 
 ## Migrations
 
-The `pgArray()` column type creates array columns:
+The `pgArray()` column type takes the name of the column and the type of its elements. It works with all of Laravel's usual modifiers, such as `nullable()`, `default()` and `change()`, and adds a few more to describe the element type:
 
 ```php
-use AndreaColzani\PgArray\Enums\PgArrayType;
-
-Schema::create('posts', function (Blueprint $table) {
-    $table->id();
-    $table->pgArray('tags', PgArrayType::Text);                              // text[]
-    $table->pgArray('scores', PgArrayType::Integer)->nullable();             // integer[] null
-    $table->pgArray('ids', PgArrayType::Uuid)->default([]);                  // uuid[] default '{}'::uuid[]
-    $table->pgArray('addresses', PgArrayType::Jsonb);                        // jsonb[]
-});
+$table->pgArray('tags', PgArrayType::Text);                          // text[]
+$table->pgArray('codes', PgArrayType::Varchar)->length(50);          // varchar(50)[]
+$table->pgArray('prices', PgArrayType::Decimal)->precision(10, 2);   // decimal(10,2)[]
+$table->pgArray('embeddings', PgArrayType::Vector)->size(1536);      // vector(1536)[]
+$table->pgArray('places', PgArrayType::Geography)->subtype('Point'); // geography(Point,4326)[]
+$table->pgArray('matrix', PgArrayType::Integer)->dimensions(2);      // integer[][]
 ```
 
-Every native column modifier works (`nullable()`, `default()`, `comment()`, `change()`, …), plus the following type modifiers:
-
-```php
-$table->pgArray('codes', PgArrayType::Varchar)->length(50);                     // varchar(50)[]
-$table->pgArray('prices', PgArrayType::Decimal)->precision(10, 2);              // decimal(10,2)[]
-$table->pgArray('seen_at', PgArrayType::TimestampTz)->precision(6);             // timestamptz(6)[]
-$table->pgArray('embeddings', PgArrayType::Vector)->size(1536);                 // vector(1536)[]
-$table->pgArray('places', PgArrayType::Geography)->subtype('Point');            // geography(Point,4326)[]
-$table->pgArray('areas', PgArrayType::Geometry)->subtype('Polygon')->srid(3857); // geometry(Polygon,3857)[]
-$table->pgArray('matrix', PgArrayType::Integer)->dimensions(2);                 // integer[][]
-```
-
-Modifiers are validated immediately: a modifier that the type does not support, or an invalid value (e.g. a scale greater than the precision), throws an `InvalidDefinitionException`.
-
-### Defaults
-
-`default()` accepts PHP arrays and Collections, rendered as an array literal cast to the column type:
-
-```php
-$table->pgArray('labels', PgArrayType::Text)->default(['draft', 'new']);
-// default '{draft,new}'::text[]
-
-$table->pgArray('matrix', PgArrayType::Integer)->dimensions(2)->default([[1, 2], [3, 4]]);
-// default '{{1,2},{3,4}}'::integer[][]
-```
-
-Elements can be scalars, `null`, nested arrays, backed enums and `Stringable` objects. Strings and `DB::raw()` expressions work as in Laravel.
-
-### `NULL` elements
-
-`nullable()` allows the **column** to be `NULL`. PostgreSQL cannot forbid `NULL` **elements** in the type, so `withoutNullElements()` adds a check constraint:
-
-```php
-$table->pgArray('labels', PgArrayType::Text)->withoutNullElements()->default([]);
-// text[] check (array_position("labels", NULL) is null) not null default '{}'::text[]
-```
-
-It is only supported by one-dimensional arrays, when creating or adding a column.
-
-### Type definitions
-
-Types can also be described with `PgArrayTypeDefinition`, which validates the modifiers and renders the SQL type:
-
-```php
-use AndreaColzani\PgArray\Database\PgArrayTypeDefinition;
-
-$table->pgArray('skus', PgArrayTypeDefinition::varchar(20)); // varchar(20)[]
-
-PgArrayTypeDefinition::decimal(10, 2)->toSql();                // decimal(10,2)
-PgArrayTypeDefinition::timestampTz(6)->toArraySql();           // timestamptz(6)[]
-PgArrayTypeDefinition::geography('Point', 4326)->toArraySql(); // geography(Point,4326)[]
-PgArrayTypeDefinition::of(PgArrayType::Integer)->toArraySql(2); // integer[][]
-```
-
-Named constructors: `of()`, `char()`, `varchar()`, `decimal()`, `numeric()`, `time()`, `timeTz()`, `timestamp()`, `timestampTz()`, `vector()`, `geometry()`, `geography()`. Chained column modifiers override the definition passed to `pgArray()`.
-
-### Altering and dropping columns
-
-Use Laravel's `change()`, restating the full column definition. When PostgreSQL cannot convert the existing values implicitly, add a `USING` expression:
-
-```php
-Schema::table('posts', function (Blueprint $table) {
-    $table->pgArray('prices', PgArrayType::Decimal)->precision(12, 2)->change();
-    $table->pgArray('codes', PgArrayType::Integer)->using('codes::integer[]')->change();
-    $table->dropColumn('tags');
-});
-```
-
-`using()` works on every supported Laravel version. It cannot be combined with `collation()` in the same `change()`: change the collation separately.
-
-> [!NOTE]
-> PostgreSQL does not enforce the declared number of dimensions: an `integer[][]` column accepts one-dimensional arrays, and is introspected as `integer[]`.
+Defaults can be written as plain PHP arrays, like `->default(['draft'])`. If an array must never contain `NULL` elements, `->withoutNullElements()` adds a check constraint for you.
 
 ## Query builder
 
-The array operators are available on the query builder, on Eloquent builders and on relations:
+PostgreSQL has dedicated operators to search inside arrays, and the package exposes them as query builder methods, available on Eloquent models and relations too:
 
 ```php
 Post::query()
-    ->wherePgArrayContains('tags', ['php', 'laravel'])        // "tags" @> ?
-    ->wherePgArrayContainedBy('tags', $allowedTags)           // "tags" <@ ?
-    ->orWherePgArrayOverlaps('tags', collect(['vue', 'php'])) // or "tags" && ?
-    ->wherePgArrayDoesntContain('tags', 'legacy')             // not ("tags" @> ?)
+    ->wherePgArrayContains('tags', ['php', 'laravel']) // has all of these tags
+    ->wherePgArrayOverlaps('tags', ['vue', 'react'])   // has at least one of them
+    ->wherePgArrayContainedBy('tags', $allowedTags)    // has no other tags
     ->get();
 ```
 
-| Operator | Methods |
-|---|---|
-| `@>` contains | `wherePgArrayContains`, `orWherePgArrayContains`, `wherePgArrayDoesntContain`, `orWherePgArrayDoesntContain` |
-| `<@` is contained by | `wherePgArrayContainedBy`, `orWherePgArrayContainedBy`, `wherePgArrayNotContainedBy`, `orWherePgArrayNotContainedBy` |
-| `&&` overlaps | `wherePgArrayOverlaps`, `orWherePgArrayOverlaps`, `wherePgArrayDoesntOverlap`, `orWherePgArrayDoesntOverlap` |
+Each method also has an `orWhere…` version and a negated one, such as `wherePgArrayDoesntContain()`. Values can be arrays, Collections or a single value.
 
-- Values can be arrays, Collections or a single value (wrapped into a one-element array). Elements can be scalars, `null`, nested arrays, backed enums, dates (written like the [date-time casts](#dates-and-time-zones)) and `Stringable` objects such as UUIDs. Passing `null` as the value throws an `InvalidValueException`.
-- The values are sent as a single binding (e.g. `{php,laravel}`), which PostgreSQL types after the column. Pass a type as third argument to add an explicit cast, for example with expressions:
-
-  ```php
-  ->wherePgArrayOverlaps('ids', $ids, PgArrayType::BigInt) // "ids" && ?::bigint[]
-  ```
-
-- Columns can be qualified (`posts.tags`) or expressions.
-- Empty values follow PostgreSQL: `@> '{}'` is always true, `<@ '{}'` matches only empty arrays, `&& '{}'` is always false.
-- The negated methods (`not (...)`) exclude rows where the column is `NULL`, like `whereJsonDoesntContain`.
-- Multidimensional values follow PostgreSQL too: the operators compare elements regardless of dimensions.
-
-### Concatenation
-
-`pgArrayAppend()` and `pgArrayPrepend()` update the matching rows with the `||` operator, and return the number of affected rows, like `increment()`:
+To add elements without reading the row first, use `pgArrayAppend()` and `pgArrayPrepend()`, which update the column directly in the database:
 
 ```php
-Post::whereKey($id)->pgArrayAppend('tags', ['new', 'featured']); // set "tags" = "tags" || '{new,featured}'
-Post::whereKey($id)->pgArrayPrepend('tags', 'first');            // set "tags" = '{first}' || "tags"
-
-// Extra columns to update, as with increment()
-Post::whereKey($id)->pgArrayAppend('tags', 'archived', null, ['archived_at' => now()]);
+Post::whereKey($id)->pgArrayAppend('tags', 'featured');
+Post::whereKey($id)->pgArrayPrepend('tags', 'breaking');
 ```
 
-On Eloquent builders, `updated_at` is touched. Appending to a `NULL` column yields the appended values.
+## Compatibility
 
-### PostGIS arrays
+The package supports:
 
-The query builder does not know the column type, so filters and concatenations on `geometry[]` / `geography[]` columns with more than one value need the type, to use the `:` delimiter:
+- **PHP** 8.3, 8.4 and 8.5
+- **Laravel** 12 and 13
+- **PostgreSQL** 15, 16, 17 and 18
+
+All of these versions are tested continuously, including against real PostgreSQL servers.
+
+Everything works with a plain PostgreSQL installation, except for two column types that come from PostgreSQL extensions. [pgvector](https://github.com/pgvector/pgvector) provides the `vector` type used by `AsVectorArray`, and [PostGIS](https://postgis.net) provides the `geometry` and `geography` types used by `AsGeometryArray`, `AsGeographyArray` and `Point`. If you need them, install them on your database server by following the [pgvector](https://github.com/pgvector/pgvector#installation) or [PostGIS](https://postgis.net/documentation/getting_started/) installation guide, then enable them in a migration:
 
 ```php
-->wherePgArrayOverlaps('areas', ['SRID=4326;POINT(9.19 45.46)', 'SRID=4326;POINT(12.5 41.9)'], PgArrayType::Geometry)
+DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+DB::statement('CREATE EXTENSION IF NOT EXISTS postgis');
 ```
 
-The query builder macros, like the migration helper, only work with the PostgreSQL driver: other drivers throw an `UnsupportedDriverException`.
+## Notes
 
-## Exceptions
-
-Every exception thrown by the package implements `AndreaColzani\PgArray\Exceptions\PgArrayException`, and extends the SPL exception of its category:
-
-| Exception | Extends | Thrown for |
-|---|---|---|
-| `UnsupportedElementException` | `InvalidArgumentException` | element types that cannot be resolved (unknown classes, pure enums, invalid serializers) |
-| `InvalidDefinitionException` | `InvalidArgumentException` | invalid cast arguments, type modifiers or column modifiers |
-| `InvalidValueException` | `UnexpectedValueException` | values that cannot be cast, serialized or parsed |
-| `UnsupportedDriverException` | `RuntimeException` | PostgreSQL-only features used with another database driver |
-
-```php
-use AndreaColzani\PgArray\Exceptions\PgArrayException;
-
-try {
-    $post->statuses = ['unknown'];
-} catch (PgArrayException $e) {
-    // …
-}
-```
-
-## Supported PostgreSQL types
-
-| PostgreSQL type | `PgArrayType` | Eloquent cast |
-|---|---|---|
-| `char`, `varchar`, `text` | `Char`, `Varchar`, `Text` | `AsStringArray`, `AsStringableArray`, enums, value objects |
-| `smallint`, `integer`, `bigint` | `SmallInt`, `Integer`, `BigInt` | `AsIntegerArray`, int-backed enums |
-| `real` | `Real` | `AsRealArray` |
-| `double precision` | `DoublePrecision` | `AsDoubleArray`, `AsFloatArray` |
-| `decimal`, `numeric` | `Decimal`, `Numeric` | `AsDecimalArray` |
-| `boolean` | `Boolean` | `AsBooleanArray` |
-| `date` | `Date` | `AsDateArray`, `AsImmutableDateArray` |
-| `time`, `timetz` | `Time`, `TimeTz` | `AsStringArray` |
-| `timestamp`, `timestamptz` | `Timestamp`, `TimestampTz` | `AsDateTimeArray`, `AsImmutableDateTimeArray` |
-| `uuid` | `Uuid` | `AsUuidArray`, `AsStringArray` |
-| `bytea` | `Bytea` | `AsByteaArray` |
-| `inet` | `Inet` | `AsInetArray` |
-| `macaddr` | `MacAddr` | `AsMacAddrArray` |
-| `json`, `jsonb` | `Json`, `Jsonb` | `AsPgArray::of()` with a `PgArrayJsonValue` class or a JSON serializer |
-| `vector` (pgvector) | `Vector` | `AsVectorArray` |
-| `geometry`, `geography` (PostGIS) | `Geometry`, `Geography` | `AsGeometryArray`, `AsGeographyArray`, `AsPgArray::of(Point::class)` |
-
-`PgArrayCast` describes how elements are converted on the PHP side (Eloquent casts), while `PgArrayType` describes the PostgreSQL type (migrations and query builder).
-
-## PHP / Laravel compatibility
-
-| | Versions |
-|---|---|
-| PHP | 8.3, 8.4, 8.5 |
-| Laravel | 12, 13 |
-| PostgreSQL | 15, 16, 17, 18 |
-| PostGIS (optional) | 3.5, 3.6 |
-| pgvector (optional) | any version packaged for the PostgreSQL release |
-
-The CI matrix runs the test suite on Ubuntu and Windows for every PHP and Laravel version, and the integration suite against real PostgreSQL servers with PostGIS and pgvector.
+- Date-times are stored with their UTC offset and read back in the application time zone. For consistent results, set the `timezone` of your `pgsql` connection to the application time zone.
+- When querying `geometry[]` or `geography[]` columns with more than one value, pass the type as third argument, e.g. `PgArrayType::Geometry`: PostGIS separates array elements with `:` instead of `,`.
+- Every exception thrown by the package implements `AndreaColzani\PgArray\Exceptions\PgArrayException`.
 
 ## Testing
 
 ```bash
-composer test      # Pest
-composer analyse   # PHPStan
-composer format    # Pint
+composer test
 ```
 
-The integration tests (group `pgsql`) run against a real PostgreSQL database, configured with environment variables:
-
-| Variable | Default |
-|---|---|
-| `PGARRAY_DB_HOST` | `127.0.0.1` |
-| `PGARRAY_DB_PORT` | `5432` |
-| `PGARRAY_DB_DATABASE` | `pgarray_testing` |
-| `PGARRAY_DB_USERNAME` | `postgres` |
-| `PGARRAY_DB_PASSWORD` | (empty) |
-
-The database must use the `UTF8` encoding. The tests are skipped when PostgreSQL is not reachable, and the pgvector / PostGIS tests when the extension is not installed. Set `PGARRAY_REQUIRE_DB=true` to make them fail instead, as in CI.
-
-```bash
-vendor/bin/pest --exclude-group=pgsql   # unit and feature tests only
-vendor/bin/pest --group=pgsql           # integration tests only
-```
+The integration tests need a PostgreSQL database: by default they connect to `pgarray_testing` on `127.0.0.1:5432`, and the connection can be changed with the `PGARRAY_DB_*` environment variables. If the database is not available, those tests are skipped.
 
 ## Changelog
 

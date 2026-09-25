@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1a2b"/>
+      <stop offset="1" stop-color="#1c3150"/>
+    </linearGradient>
+    <linearGradient id="db" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f5f9e"/>
+      <stop offset="0.5" stop-color="#4a82c9"/>
+      <stop offset="1" stop-color="#2f5f9e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff2d20"/>
+      <stop offset="1" stop-color="#ff7a45"/>
+    </linearGradient>
+    <clipPath id="card">
+      <rect width="1280" height="640" rx="36"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#card)">
+    <rect width="1280" height="640" fill="url(#bg)"/>
+    <circle cx="250" cy="320" r="260" fill="#4a82c9" fill-opacity="0.08"/>
+  </g>
+
+  <!-- Icon: a database holding an array -->
+  <g transform="translate(-60 0)">
+    <path d="M150 200 V440 A150 44 0 0 0 450 440 V200 Z" fill="url(#db)"/>
+    <path d="M150 280 A150 44 0 0 0 450 280" fill="none" stroke="#0f1a2b" stroke-opacity="0.35" stroke-width="4"/>
+    <path d="M150 360 A150 44 0 0 0 450 360" fill="none" stroke="#0f1a2b" stroke-opacity="0.35" stroke-width="4"/>
+    <ellipse cx="300" cy="200" rx="150" ry="44" fill="#7fb0ec"/>
+    <ellipse cx="300" cy="200" rx="150" ry="44" fill="none" stroke="#a9ccff" stroke-width="3"/>
+
+    <!-- Array card -->
+    <rect x="196" y="326" width="340" height="120" rx="28" fill="#0f1a2b" stroke="url(#accent)" stroke-width="4"/>
+    <g font-family="'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace" font-size="72" font-weight="300" fill="#ff7a45">
+      <text x="216" y="410">{</text>
+      <text x="472" y="410">}</text>
+    </g>
+    <rect x="276" y="368" width="36" height="36" rx="10" fill="#ff2d20"/>
+    <rect x="348" y="368" width="36" height="36" rx="10" fill="#ff5a33"/>
+    <rect x="420" y="368" width="36" height="36" rx="10" fill="#ff7a45"/>
+  </g>
+
+  <!-- Title -->
+  <g font-family="'Segoe UI', Inter, 'Helvetica Neue', Arial, sans-serif">
+    <text x="540" y="262" font-size="56" font-weight="700" fill="#ff5a33">Laravel</text>
+    <text x="540" y="342" font-size="74" font-weight="800" fill="#ffffff">PostgreSQL Arrays</text>
+    <text x="540" y="412" font-size="30" fill="#c3d0e3">Array columns as first-class citizens</text>
+    <text x="540" y="452" font-size="30" fill="#c3d0e3">in Eloquent, migrations and queries</text>
+  </g>
+</svg>
