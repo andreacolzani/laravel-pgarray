@@ -8,6 +8,7 @@ use AndreaColzani\PgArray\Casts\AsDateArray;
 use AndreaColzani\PgArray\Casts\AsDateTimeArray;
 use AndreaColzani\PgArray\Casts\AsDecimalArray;
 use AndreaColzani\PgArray\Casts\AsDoubleArray;
+use AndreaColzani\PgArray\Casts\AsEncryptedArray;
 use AndreaColzani\PgArray\Casts\AsFloatArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
@@ -84,6 +85,15 @@ final class TestModel extends Model
             ),
             'skus' => AsPgArray::of(Sku::class),
             'country_codes' => AsPgArray::of(CountryCode::class),
+            'secrets' => AsEncryptedArray::class,
+            'secret_collection' => AsEncryptedArray::collect(),
+            'encrypted_numbers' => AsPgArray::encrypted(PgArrayCast::Integer),
+            'encrypted_dates' => AsPgArray::encrypted(
+                PgArrayCast::ImmutableDate,
+                PgArrayContainer::Collection,
+            ),
+            'encrypted_statuses' => AsPgArray::encrypted(Status::class),
+            'encrypted_addresses' => AsPgArray::encrypted(Address::class),
         ];
     }
 }

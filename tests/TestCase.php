@@ -30,6 +30,8 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
+        config()->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
+
         config()->set('pgarray.serializers', [
             Money::class => MoneySerializer::class,
         ]);

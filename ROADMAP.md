@@ -465,7 +465,7 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 8 — Element-level `Encrypted`
+## Milestone 8 — Element-level `Encrypted` [DONE]
 
 Implement encryption at the **element level**, not at the array level.
 
@@ -481,15 +481,36 @@ PostgreSQL array
 
 ### Tasks
 
-- [ ] Implement `EncryptedCaster`.
-- [ ] Integrate it into the resolver.
-- [ ] Encrypt each element on `set()`.
-- [ ] Decrypt each element on `get()`.
-- [ ] Handle `null`.
-- [ ] Handle Collection.
-- [ ] Test full round-trip.
-- [ ] Test that encryption remains element-level.
-- [ ] Do not duplicate Laravel's existing `encrypted:array` semantics.
+- [x] Implement `EncryptedCaster` (decorator around the resolved element caster).
+- [x] Integrate it into the resolver (`PgArrayElementDefinition::$encrypted`).
+- [x] Encrypt each element on `set()`.
+- [x] Decrypt each element on `get()`.
+- [x] Handle `null`.
+- [x] Handle Collection.
+- [x] Test full round-trip.
+- [x] Test that encryption remains element-level.
+- [x] Do not duplicate Laravel's existing `encrypted:array` semantics.
+
+Usage:
+
+```php
+// text[] columns — every element is a separate ciphertext
+'secrets' => AsEncryptedArray::class,
+'secret_collection' => AsEncryptedArray::collect(),
+
+'pins' => AsPgArray::encrypted(PgArrayCast::Integer),
+'birthdays' => AsPgArray::encrypted(PgArrayCast::Date, PgArrayContainer::Collection),
+'statuses' => AsPgArray::encrypted(Status::class),
+```
+
+> **Design decisions:**
+> - Encryption is an element modifier, not a `PgArrayCast` case: `EncryptedCaster` decorates the caster resolved for any element type (built-in casts, backed enums, `PgArrayValue` / `PgArrayJsonValue` objects, external serializers). `set()` runs the element caster first and encrypts its logical value; `get()` decrypts and passes the plaintext to the element caster.
+> - Declared through `AsPgArray::encrypted($type, $container)`, which produces `AsPgArray:<type>,<container>,encrypted`; `AsEncryptedArray` (+ `collect()`) covers the common string case. Unknown modifiers in the cast definition fail with `InvalidArgumentException`.
+> - Each element is encrypted separately, so array structure (dimensions, length, `NULL` elements) stays visible and only element values are hidden. This is intentionally different from Laravel's `encrypted:array`, which encrypts the whole array as one JSON payload into a single column value; users who want that keep using the native cast.
+> - The logical value is encrypted in its PostgreSQL text representation (`true` / `false` as `t` / `f`, like `PgArrayParser::serialize()`), without PHP serialization, so the same element caster parses it after decryption. Non-scalar logical values fail with `UnexpectedValueException`.
+> - Ciphertexts are strings: encrypted arrays require `text[]` (or `varchar[]`) columns, including for JSON objects, integers, dates and enums.
+> - Encryption uses `Model::currentEncrypter()`, so `Model::encryptUsing()` and previous keys (`APP_PREVIOUS_KEYS`) behave as with Laravel's `encrypted` casts. The encrypter is resolved on every call, not captured when the cast is built.
+> - `NULL` elements (and `null` logical values returned by the element caster) are stored as SQL `NULL`, not encrypted. Every other element gets a fresh IV, so equal plaintexts produce different ciphertexts. Invalid payloads fail with Laravel's `DecryptException`.
 
 ### Checkpoint
 

@@ -113,3 +113,50 @@ it('resolves the castable classes', function () {
         ->and($casts['numbers'])
         ->toBe(AsPgArray::class.':integer,array');
 });
+
+it('creates an encrypted array cast definition', function () {
+    expect(AsPgArray::encrypted(PgArrayCast::Integer))
+        ->toBe(AsPgArray::class.':integer,array,encrypted');
+});
+
+it('creates an encrypted collection cast definition', function () {
+    expect(
+        AsPgArray::encrypted(
+            Status::class,
+            PgArrayContainer::Collection,
+        ),
+    )->toBe(AsPgArray::class.':'.Status::class.',collection,encrypted');
+});
+
+it('rejects an unknown class-string encrypted definition', function () {
+    AsPgArray::encrypted('App\Missing\Element');
+})->throws(
+    UnsupportedElementException::class,
+    'Unknown element type [App\Missing\Element]',
+);
+
+it('creates an encrypted PgArray cast', function () {
+    $cast = AsPgArray::castUsing([
+        PgArrayCast::Integer->value,
+        PgArrayContainer::Array->value,
+        'encrypted',
+    ]);
+
+    $serialized = $cast->set(new TestModel, 'numbers', [42], []);
+
+    expect($serialized)
+        ->not->toBe('{42}')
+        ->and($cast->get(new TestModel, 'numbers', $serialized, []))
+        ->toBe([42]);
+});
+
+it('rejects an unsupported element modifier', function () {
+    AsPgArray::castUsing([
+        PgArrayCast::Integer->value,
+        PgArrayContainer::Array->value,
+        'hashed',
+    ]);
+})->throws(
+    InvalidArgumentException::class,
+    'Unsupported element modifier [hashed]. Expected [encrypted].',
+);

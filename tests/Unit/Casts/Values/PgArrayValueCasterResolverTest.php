@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Casts\Values\EncryptedCaster;
 use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\JsonObjectCaster;
@@ -141,3 +142,26 @@ it('rejects an invalid configured serializer', function (): void {
     UnsupportedElementException::class,
     'Invalid serializer [stdClass] for element type ['.Money::class.'].',
 );
+
+it('wraps encrypted built-in casts in the encrypted caster', function (): void {
+    $caster = PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(PgArrayCast::Integer, encrypted: true));
+
+    expect($caster)->toBeInstanceOf(EncryptedCaster::class)
+        ->and($caster->get($caster->set('42')))->toBe(42);
+});
+
+it('wraps encrypted class-string types in the encrypted caster', function (string $type, mixed $value): void {
+    $caster = PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($type, encrypted: true));
+
+    expect($caster)->toBeInstanceOf(EncryptedCaster::class)
+        ->and($caster->get($caster->set($value)))->toEqual($value);
+})->with([
+    'backed enum' => [Status::class, Status::Active],
+    'PgArrayValue' => [Email::class, new Email('mario@example.com')],
+    'PgArrayJsonValue' => [Address::class, new Address('Via Roma 1', 'Milano')],
+    'serializer' => [Money::class, new Money(1250, 'EUR')],
+]);
+
+it('rejects unsupported encrypted class-string types', function (): void {
+    PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(stdClass::class, encrypted: true));
+})->throws(UnsupportedElementException::class, 'Unsupported element type [stdClass].');

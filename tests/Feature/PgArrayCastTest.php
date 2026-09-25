@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Support\PgArrayParser;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Contact;
 use AndreaColzani\PgArray\Tests\Fixtures\CountryCode;
@@ -13,7 +14,9 @@ use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Stringable;
 
 it('casts an attribute when retrieving it from an eloquent model', function (): void {
@@ -471,4 +474,98 @@ it('shares a declared serializer between element types', function (): void {
             [new CountryCode('IT'), new CountryCode('FR')],
             [new CountryCode('DE'), null],
         ]);
+});
+
+it('encrypts each element when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->secrets = ['alpha', null, 'alpha', ''];
+
+    $elements = PgArrayParser::parse($model->getAttributes()['secrets']);
+
+    expect($elements)->toHaveCount(4)
+        ->and($elements[1])->toBeNull()
+        ->and(Crypt::decryptString($elements[0]))->toBe('alpha')
+        ->and(Crypt::decryptString($elements[2]))->toBe('alpha')
+        ->and(Crypt::decryptString($elements[3]))->toBe('')
+        ->and($elements[0])->not->toBe($elements[2]);
+});
+
+it('does not encrypt the array as a whole', function (): void {
+    $model = new TestModel;
+
+    $model->secrets = ['alpha', 'beta'];
+
+    expect($model->getAttributes()['secrets'])->toStartWith('{')->toEndWith('}')
+        ->and(fn () => Crypt::decryptString($model->getAttributes()['secrets']))
+        ->toThrow(DecryptException::class);
+});
+
+it('decrypts each element when retrieving attributes', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'secrets' => PgArrayParser::serialize([
+            Crypt::encryptString('alpha'),
+            null,
+            Crypt::encryptString('beta'),
+        ]),
+    ]);
+
+    expect($model->secrets)->toBe(['alpha', null, 'beta']);
+});
+
+it('round-trips encrypted elements through an eloquent model', function (string $attribute, array $value): void {
+    $model = new TestModel;
+    $model->{$attribute} = $value;
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->{$attribute})->toEqual($value);
+})->with([
+    'strings' => ['secrets', ['alpha', 'NULL', 'a,b {c} "d"', null]],
+    'multidimensional strings' => ['secrets', [['alpha', 'beta'], ['gamma', null]]],
+    'integers' => ['encrypted_numbers', [1, -2, null, 3]],
+    'multidimensional integers' => ['encrypted_numbers', [[1, 2], [3, 4]]],
+    'backed enums' => ['encrypted_statuses', [Status::Active, null, Status::Inactive]],
+    'JSON objects' => ['encrypted_addresses', [new Address('Via Roma 1', 'Milano'), null]],
+]);
+
+it('preserves null encrypted arrays', function (): void {
+    $model = new TestModel;
+
+    $model->secrets = null;
+
+    expect($model->getAttributes()['secrets'])->toBeNull()
+        ->and($model->secrets)->toBeNull();
+});
+
+it('supports an encrypted collection', function (): void {
+    $model = new TestModel;
+
+    $model->secret_collection = collect(['alpha', 'beta']);
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->secret_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect(['alpha', 'beta']));
+});
+
+it('supports an encrypted element type collection', function (): void {
+    $dates = collect([CarbonImmutable::parse('2026-09-25'), null]);
+
+    $model = new TestModel;
+    $model->encrypted_dates = $dates;
+
+    $elements = PgArrayParser::parse($model->getAttributes()['encrypted_dates']);
+
+    expect(Crypt::decryptString($elements[0]))->toBe('2026-09-25')
+        ->and($elements[1])->toBeNull();
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->encrypted_dates)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual($dates);
 });

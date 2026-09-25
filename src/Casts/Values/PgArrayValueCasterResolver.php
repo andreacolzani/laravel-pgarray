@@ -36,6 +36,9 @@ use UnitEnum;
  *
  * Explicit configuration wins over class-level defaults, so serializers can
  * override PgArrayValue implementations and backed enums without modifying them.
+ *
+ * Encrypted definitions wrap the resolved caster in EncryptedCaster, so any
+ * element type can be encrypted element by element.
  */
 final class PgArrayValueCasterResolver
 {
@@ -43,11 +46,13 @@ final class PgArrayValueCasterResolver
     {
         $type = $definition->type;
 
-        if ($type instanceof PgArrayCast) {
-            return PgArrayValueCasterFactory::make($type);
-        }
+        $caster = $type instanceof PgArrayCast
+            ? PgArrayValueCasterFactory::make($type)
+            : self::resolveClassString($type);
 
-        return self::resolveClassString($type);
+        return $definition->encrypted
+            ? new EncryptedCaster($caster)
+            : $caster;
     }
 
     /**

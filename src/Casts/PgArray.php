@@ -22,9 +22,10 @@ final class PgArray implements CastsAttributes
     public function __construct(
         PgArrayCast|string $type,
         private readonly PgArrayContainer $container,
+        bool $encrypted = false,
     ) {
         $this->caster = PgArrayValueCasterResolver::resolve(
-            new PgArrayElementDefinition($type),
+            new PgArrayElementDefinition($type, $encrypted),
         );
     }
 
