@@ -518,7 +518,7 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 9 — Element-level `Hashed`
+## Milestone 9 — Element-level `Hashed` [DONE]
 
 Hash elements individually:
 
@@ -534,17 +534,43 @@ Hashing is one-way, so retrieval returns hashes rather than plaintext.
 
 ### Tasks
 
-- [ ] Implement `HashedCaster`.
-- [ ] Integrate it into the resolver.
-- [ ] Hash each element on `set()`.
-- [ ] Preserve hashes on `get()`.
-- [ ] Design the verification API.
-- [ ] Consider whether a specialized `HashedArray` wrapper is justified.
-- [ ] Test positive verification.
-- [ ] Test negative verification.
-- [ ] Test multiple hashes.
-- [ ] Test null.
-- [ ] Test Collection.
+- [x] Implement `HashedCaster`.
+- [x] Integrate it into the resolver (`PgArrayCast::Hashed` → `PgArrayValueCasterFactory`).
+- [x] Hash each element on `set()`.
+- [x] Preserve hashes on `get()`.
+- [x] Design the verification API (`Support\PgArrayHash::check()` / `find()`).
+- [x] Consider whether a specialized `HashedArray` wrapper is justified (not justified, see below).
+- [x] Test positive verification.
+- [x] Test negative verification.
+- [x] Test multiple hashes.
+- [x] Test null.
+- [x] Test Collection.
+
+Usage:
+
+```php
+'recovery_codes' => AsHashedArray::class, // text[] column
+'recovery_codes' => AsHashedArray::collect(),
+
+$user->recovery_codes = ['alpha', 'beta'];              // stored as hashes
+
+PgArrayHash::check($code, $user->recovery_codes);       // bool
+
+$key = PgArrayHash::find($code, $user->recovery_codes); // int|string|null
+if ($key !== null) {
+    $codes = $user->recovery_codes;
+    unset($codes[$key]);
+    $user->recovery_codes = array_values($codes);
+}
+```
+
+> **Design decisions:**
+> - Hashing is declared through the dedicated `AsHashedArray` castable (+ `collect()`), backed by a new `PgArrayCast::Hashed` case resolved by `PgArrayValueCasterFactory` (so `AsPgArray::of(PgArrayCast::Hashed)` also works). There is no `AsPgArray::hashed()` element modifier: retrieved elements are always hash strings, so the element type is irrelevant when reading.
+> - `HashedCaster` mirrors Laravel's `hashed` cast element by element: values already hashed (`Hash::isHashed()`) are stored unchanged, so hashes read from the database can be assigned again (e.g. appending a new code) without being hashed twice; they must pass `Hash::verifyConfiguration()`, otherwise a `RuntimeException` is thrown. Other values are hashed with `Hash::make()` using the configured driver.
+> - Accepted input: strings, integers, floats and `Stringable`, hashed in their string form. Booleans and other objects fail with `UnexpectedValueException`. `NULL` elements stay SQL `NULL`.
+> - Verification uses a static helper, `Support\PgArrayHash`: `check($value, $hashes)` and `find($value, $hashes)` returning the key of the first matching hash (to remove consumed values such as recovery codes). It accepts arrays, Collections and `null`, and checks only top-level string elements (`NULL` elements and nested arrays are skipped).
+> - No `HashedArray` wrapper: it would introduce a third container next to `array` / `Collection` for two methods; the helper works with both existing containers.
+> - Test suite: `hashing.bcrypt.rounds` is lowered to 4 in `TestCase` to keep hashing tests fast.
 
 ### Checkpoint
 

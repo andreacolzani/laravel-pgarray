@@ -9,6 +9,7 @@ use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
 use AndreaColzani\PgArray\Casts\Values\DoubleCaster;
 use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\FloatCaster;
+use AndreaColzani\PgArray\Casts\Values\HashedCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
@@ -29,6 +30,7 @@ dataset('pg array value casters', [
     DoubleCaster::class,
     EnumCaster::class,
     FloatCaster::class,
+    HashedCaster::class,
     ImmutableDateCaster::class,
     ImmutableDateTimeCaster::class,
     IntegerCaster::class,

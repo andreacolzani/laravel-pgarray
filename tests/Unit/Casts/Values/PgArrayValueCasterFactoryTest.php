@@ -8,6 +8,7 @@ use AndreaColzani\PgArray\Casts\Values\DateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\DecimalCaster;
 use AndreaColzani\PgArray\Casts\Values\DoubleCaster;
 use AndreaColzani\PgArray\Casts\Values\FloatCaster;
+use AndreaColzani\PgArray\Casts\Values\HashedCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateCaster;
 use AndreaColzani\PgArray\Casts\Values\ImmutableDateTimeCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
@@ -93,4 +94,9 @@ it('creates a UuidCaster', function (): void {
 it('creates an UlidCaster', function (): void {
     expect(PgArrayValueCasterFactory::make(PgArrayCast::Ulid))
         ->toBeInstanceOf(UlidCaster::class);
+});
+
+it('creates the hashed caster', function (): void {
+    expect(PgArrayValueCasterFactory::make(PgArrayCast::Hashed))
+        ->toBeInstanceOf(HashedCaster::class);
 });

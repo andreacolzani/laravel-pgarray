@@ -9,6 +9,7 @@ use AndreaColzani\PgArray\Casts\AsDecimalArray;
 use AndreaColzani\PgArray\Casts\AsDoubleArray;
 use AndreaColzani\PgArray\Casts\AsEncryptedArray;
 use AndreaColzani\PgArray\Casts\AsFloatArray;
+use AndreaColzani\PgArray\Casts\AsHashedArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateArray;
 use AndreaColzani\PgArray\Casts\AsImmutableDateTimeArray;
 use AndreaColzani\PgArray\Casts\AsIntegerArray;
@@ -36,4 +37,5 @@ dataset('pg array castables', [
     AsUlidArray::class,
     AsUuidArray::class,
     AsEncryptedArray::class,
+    AsHashedArray::class,
 ]);

@@ -30,6 +30,8 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
+        config()->set('hashing.bcrypt.rounds', 4);
+
         config()->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
 
         config()->set('pgarray.serializers', [

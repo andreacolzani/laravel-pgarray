@@ -19,6 +19,7 @@ final class PgArrayValueCasterFactory
             PgArrayCast::Real => new RealCaster,
             PgArrayCast::String => new StringCaster,
             PgArrayCast::Stringable => new StringableCaster,
+            PgArrayCast::Hashed => new HashedCaster,
             PgArrayCast::Date => new DateCaster,
             PgArrayCast::DateTime => new DateTimeCaster,
             PgArrayCast::ImmutableDate => new ImmutableDateCaster,

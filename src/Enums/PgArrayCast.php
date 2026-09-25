@@ -20,6 +20,8 @@ enum PgArrayCast: string
     case String = 'string';
     case Stringable = 'stringable';
 
+    case Hashed = 'hashed';
+
     case Uri = 'uri';
     case Uuid = 'uuid';
     case Ulid = 'ulid';

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Support\PgArrayHash;
 use AndreaColzani\PgArray\Support\PgArrayParser;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Contact;
@@ -17,6 +18,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Stringable;
 
 it('casts an attribute when retrieving it from an eloquent model', function (): void {
@@ -568,4 +570,79 @@ it('supports an encrypted element type collection', function (): void {
     expect($restored->encrypted_dates)
         ->toBeInstanceOf(Collection::class)
         ->toEqual($dates);
+});
+
+it('hashes each element when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->recovery_codes = ['alpha', null, 'beta'];
+
+    $elements = PgArrayParser::parse($model->getAttributes()['recovery_codes']);
+
+    expect($elements)->toHaveCount(3)
+        ->and($elements[1])->toBeNull()
+        ->and(Hash::check('alpha', $elements[0]))->toBeTrue()
+        ->and(Hash::check('beta', $elements[2]))->toBeTrue();
+});
+
+it('retrieves hashes and verifies values against them', function (): void {
+    $model = new TestModel;
+    $model->recovery_codes = ['alpha', 'beta'];
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->recovery_codes)->toHaveCount(2)
+        ->each(fn ($hash) => $hash->not->toBeIn(['alpha', 'beta']))
+        ->and(PgArrayHash::check('beta', $restored->recovery_codes))->toBeTrue()
+        ->and(PgArrayHash::check('gamma', $restored->recovery_codes))->toBeFalse();
+});
+
+it('keeps existing hashes when assigning them again', function (): void {
+    $model = new TestModel;
+    $model->recovery_codes = ['alpha', 'beta'];
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+    $hashes = $restored->recovery_codes;
+
+    $restored->recovery_codes = [...$hashes, 'gamma'];
+
+    expect($restored->recovery_codes)->toHaveCount(3)
+        ->and(array_slice($restored->recovery_codes, 0, 2))->toBe($hashes)
+        ->and(PgArrayHash::check('gamma', $restored->recovery_codes))->toBeTrue();
+});
+
+it('removes a consumed value from a hashed array', function (): void {
+    $model = new TestModel;
+    $model->recovery_codes = ['alpha', 'beta', 'gamma'];
+
+    $codes = $model->recovery_codes;
+    unset($codes[PgArrayHash::find('beta', $codes)]);
+    $model->recovery_codes = array_values($codes);
+
+    expect($model->recovery_codes)->toHaveCount(2)
+        ->and(PgArrayHash::check('beta', $model->recovery_codes))->toBeFalse()
+        ->and(PgArrayHash::check('alpha', $model->recovery_codes))->toBeTrue();
+});
+
+it('preserves null hashed arrays', function (): void {
+    $model = new TestModel;
+
+    $model->recovery_codes = null;
+
+    expect($model->getAttributes()['recovery_codes'])->toBeNull()
+        ->and($model->recovery_codes)->toBeNull()
+        ->and(PgArrayHash::check('alpha', $model->recovery_codes))->toBeFalse();
+});
+
+it('supports a hashed collection', function (): void {
+    $model = new TestModel;
+
+    $model->recovery_code_collection = collect(['alpha', 'beta']);
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->recovery_code_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toHaveCount(2)
+        ->and(PgArrayHash::find('beta', $restored->recovery_code_collection))->toBe(1);
 });
