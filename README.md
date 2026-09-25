@@ -311,6 +311,15 @@ DB::statement('CREATE EXTENSION IF NOT EXISTS postgis');
 - When querying `geometry[]` or `geography[]` columns with more than one value, pass the type as third argument, e.g. `PgArrayType::Geometry`: PostGIS separates array elements with `:` instead of `,`.
 - Every exception thrown by the package implements `AndreaColzani\PgArray\Exceptions\PgArrayException`.
 
+## AI assistants
+
+If you use [Laravel Boost](https://github.com/laravel/boost), your AI coding assistant can learn how to use this package. It ships a short guideline and a detailed `pgarray-development` skill, with examples for migrations, casts, queries and common pitfalls. Boost picks them up automatically when you install it, or when you refresh its resources in a project that already uses it:
+
+```bash
+php artisan boost:install   # first installation
+php artisan boost:update    # Boost already installed
+```
+
 ## Testing
 
 ```bash
