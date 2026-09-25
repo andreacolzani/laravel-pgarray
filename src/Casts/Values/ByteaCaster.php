@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Stringable;
-use UnexpectedValueException;
 
 /**
  * Casts bytea array elements to and from raw binary strings.
@@ -15,6 +15,8 @@ use UnexpectedValueException;
  *
  * Assigned strings are always treated as raw binary data, never as values
  * already encoded in the PostgreSQL bytea format.
+ *
+ * @internal
  */
 final class ByteaCaster implements PgArrayValueCaster
 {
@@ -38,7 +40,7 @@ final class ByteaCaster implements PgArrayValueCaster
         }
 
         if (! is_string($value) && ! $value instanceof Stringable) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to bytea.',
                 get_debug_type($value),
             ));
@@ -58,7 +60,7 @@ final class ByteaCaster implements PgArrayValueCaster
             : false;
 
         if ($binary === false) {
-            throw new UnexpectedValueException('Invalid bytea hex value.');
+            throw new InvalidValueException('Invalid bytea hex value.');
         }
 
         return $binary;
@@ -71,7 +73,7 @@ final class ByteaCaster implements PgArrayValueCaster
     private function decodeEscape(string $value): string
     {
         if (preg_match('/^(?:[^\\\\]|\\\\\\\\|\\\\[0-3][0-7]{2})*$/s', $value) !== 1) {
-            throw new UnexpectedValueException('Invalid bytea escape value.');
+            throw new InvalidValueException('Invalid bytea escape value.');
         }
 
         // Only \\ and \ooo sequences are left: both are decoded like in C.

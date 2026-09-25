@@ -6,6 +6,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use Illuminate\Support\Uri;
 
+/**
+ * @internal
+ */
 final class UriCaster implements PgArrayValueCaster
 {
     public function get(mixed $value): ?Uri

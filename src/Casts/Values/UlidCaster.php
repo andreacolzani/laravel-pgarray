@@ -6,6 +6,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use Symfony\Component\Uid\Ulid;
 
+/**
+ * @internal
+ */
 final class UlidCaster implements PgArrayValueCaster
 {
     public function get(mixed $value): ?Ulid

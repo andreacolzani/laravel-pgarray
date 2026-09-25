@@ -1003,20 +1003,20 @@ Final supported matrix:
 
 ---
 
-## Milestone 16 — Public API audit
+## Milestone 16 — Public API audit [DONE]
 
 Review the complete public API before the first stable release.
 
 ### Review
 
-- [ ] Naming
-- [ ] Namespaces
-- [ ] Exceptions
-- [ ] PHPDoc
-- [ ] Type declarations
-- [ ] Fluent APIs
-- [ ] Backward compatibility
-- [ ] Public vs internal classes
+- [x] Naming
+- [x] Namespaces
+- [x] Exceptions
+- [x] PHPDoc
+- [x] Type declarations
+- [x] Fluent APIs
+- [x] Backward compatibility
+- [x] Public vs internal classes
 
 Pay particular attention to:
 
@@ -1032,6 +1032,31 @@ PgArrayValue
 ```
 
 Each public component should have one clear responsibility.
+
+Public API (covered by semantic versioning):
+
+| Area | Components |
+|---|---|
+| Eloquent casts | `AsPgArray`, `As*Array`, `PgArrayCastable` |
+| Enums | `PgArrayCast` (PHP element casts), `PgArrayType` (PostgreSQL element types), `PgArrayContainer` |
+| Custom elements | `Contracts\*`, `Attributes\PgArraySerializer`, `Concerns\InteractsWithPgArrayJson`, `Support\PgArraySerializerRegistry` |
+| Value objects | `Types\Point`, `Types\Vector` |
+| Migrations | `$table->pgArray()`, `Database\PgArrayColumnDefinition` modifiers, `Database\PgArrayTypeDefinition` |
+| Query builder | `wherePgArray*()` / `orWherePgArray*()`, `pgArrayAppend()` / `pgArrayPrepend()` macros |
+| Hashing | `Support\PgArrayHash` |
+| Exceptions | `Exceptions\*` |
+
+> **Design decisions:**
+> - Exceptions live in `AndreaColzani\PgArray\Exceptions` and implement the `PgArrayException` marker interface, so `catch (PgArrayException $e)` catches every package error. Each one extends the SPL exception of its category, so existing SPL catches keep working:
+>   - `UnsupportedElementException` (`InvalidArgumentException`): element type that cannot be resolved (moved from `Casts\Values`).
+>   - `InvalidDefinitionException` (`InvalidArgumentException`): invalid cast arguments, type modifiers, column modifiers or delimiters.
+>   - `InvalidValueException` (`UnexpectedValueException`): values that cannot be cast, serialized or parsed, including malformed array literals and invalid `Point` / `Vector` values.
+>   - `UnsupportedDriverException` (`RuntimeException`): PostgreSQL-only features used with another driver.
+> - Invalid `AsPgArray` / `As*Array` arguments no longer leak `ValueError` from `PgArrayCast::from()` / `PgArrayContainer::from()`: unknown types throw `UnsupportedElementException`, unknown containers `InvalidDefinitionException`. Unknown backed enum values in `InteractsWithPgArrayJson` throw `InvalidValueException`.
+> - Implementation classes are marked `@internal` and excluded from the BC promise: `Casts\PgArray`, everything in `Casts\Values` (including `PgArrayValueCaster`: custom element types use `PgArrayValue`, `PgArrayJsonValue` or external serializers), `Database\PgArraySchema`, `PgArrayQuery`, `PgArrayConcatenation`, `PgArrayDefault`, `Support\PgArrayParser`, `PgArrayLiteral`, `PgArrayContainer::fromCastArgument()`, and the read accessors of `PgArrayColumnDefinition`.
+> - The empty `AndreaColzani\PgArray\PgArray` class and its `PgArray` facade (skeleton leftovers) are removed: the package is stateless and used through casts, macros and migration helpers, so a facade added no value.
+> - Every file declares `strict_types`; arch tests enforce strict types, the exception hierarchy, and that no SPL exception is thrown outside `Exceptions`.
+> - Naming is unchanged: `PgArrayCast` and `PgArrayType` describe the PHP and PostgreSQL side respectively, and the query builder macros follow Laravel's naming (`whereJsonDoesntContain` → `wherePgArrayDoesntContain`).
 
 ---
 

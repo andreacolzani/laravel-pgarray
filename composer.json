@@ -66,10 +66,7 @@
         "laravel": {
             "providers": [
                 "AndreaColzani\\PgArray\\PgArrayServiceProvider"
-            ],
-            "aliases": {
-                "PgArray": "AndreaColzani\\PgArray\\Facades\\PgArray"
-            }
+            ]
         }
     },
     "minimum-stability": "dev",

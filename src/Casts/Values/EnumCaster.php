@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use BackedEnum;
 use ReflectionEnum;
-use UnexpectedValueException;
 
 /**
  * Casts array elements to and from a BackedEnum.
@@ -16,6 +16,8 @@ use UnexpectedValueException;
  *
  * Both enum instances and raw backing values are accepted on set(); any value
  * that does not match a case fails explicitly instead of being stored as is.
+ *
+ * @internal
  */
 final class EnumCaster implements PgArrayValueCaster
 {
@@ -57,7 +59,7 @@ final class EnumCaster implements PgArrayValueCaster
         $backingValue = $this->normalize($value);
 
         return ($backingValue === null ? null : $this->enum::tryFrom($backingValue))
-            ?? throw new UnexpectedValueException(sprintf(
+            ?? throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to enum [%s].',
                 is_int($value) || is_string($value) ? $value : get_debug_type($value),
                 $this->enum,

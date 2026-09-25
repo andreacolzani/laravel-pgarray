@@ -16,9 +16,7 @@ final class AsStringArray extends PgArrayCastable
     {
         return new PgArray(
             type: PgArrayCast::String,
-            container: PgArrayContainer::from(
-                $arguments[0] ?? PgArrayContainer::Array->value,
-            ),
+            container: PgArrayContainer::fromCastArgument($arguments[0] ?? null),
         );
     }
 }

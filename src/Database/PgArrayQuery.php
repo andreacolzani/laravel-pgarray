@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Database;
 
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Exceptions\UnsupportedDriverException;
 use AndreaColzani\PgArray\Support\PgArrayLiteral;
 use AndreaColzani\PgArray\Support\PgArrayParser;
 use Illuminate\Contracts\Database\Query\Expression;
@@ -13,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Grammar;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\PostgresGrammar;
-use RuntimeException;
 
 /**
  * Registers the PostgreSQL array operators on the query builder:
@@ -22,6 +22,8 @@ use RuntimeException;
  *   ->wherePgArrayContainedBy('tags', $allowed);          // "tags" <@ ?
  *   ->wherePgArrayOverlaps('tags', collect(['php']));     // "tags" && ?
  *   ->pgArrayAppend('tags', ['new']);                     // set "tags" = "tags" || '{new}'
+ *
+ * @internal
  */
 final class PgArrayQuery
 {
@@ -80,8 +82,6 @@ final class PgArrayQuery
     /**
      * The update values of an append / prepend, e.g. ["tags" => "tags" || '{new}'].
      *
-     * @internal
-     *
      * @return array<string, PgArrayConcatenation>
      */
     public static function concatenation(
@@ -122,8 +122,6 @@ final class PgArrayQuery
     }
 
     /**
-     * @internal
-     *
      * @param  array{column: string|Expression, operator: string, not: bool, cast: PgArrayType|PgArrayTypeDefinition|null}  $where
      */
     public static function compileWhere(PostgresGrammar $grammar, array $where): string
@@ -133,27 +131,18 @@ final class PgArrayQuery
         return $where['not'] ? 'not ('.$sql.')' : $sql;
     }
 
-    /**
-     * @internal
-     */
     public static function grammar(Builder $query, string $method): PostgresGrammar
     {
         $grammar = $query->getGrammar();
 
         if (! $grammar instanceof PostgresGrammar) {
-            throw new RuntimeException(sprintf(
-                '%s() is only supported by PostgreSQL, [%s] given.',
-                $method,
-                $grammar::class,
-            ));
+            throw UnsupportedDriverException::for($method.'()', $grammar);
         }
 
         return $grammar;
     }
 
     /**
-     * @internal
-     *
      * Without a type the default ',' delimiter is used: geometry / geography
      * values need their type to be passed.
      */
@@ -166,9 +155,6 @@ final class PgArrayQuery
         };
     }
 
-    /**
-     * @internal
-     */
     public static function cast(PgArrayType|PgArrayTypeDefinition|null $type): string
     {
         if ($type === null) {

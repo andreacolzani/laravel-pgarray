@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\PgArray;
-use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 
@@ -80,18 +81,18 @@ it('passes class-string types to the element resolver', function () {
 
 it('rejects an unknown class-string type', function () {
     AsPgArray::castUsing(['App\\Missing\\Element']);
-})->throws(ValueError::class);
+})->throws(UnsupportedElementException::class, 'Unknown element type [App\Missing\Element].');
 
 it('rejects an unsupported type', function () {
     AsPgArray::castUsing(['unsupported']);
-})->throws(ValueError::class);
+})->throws(UnsupportedElementException::class, 'Unknown element type [unsupported].');
 
 it('rejects an unsupported container', function () {
     AsPgArray::castUsing([
         PgArrayCast::Integer->value,
         'unsupported',
     ]);
-})->throws(ValueError::class);
+})->throws(InvalidDefinitionException::class, 'Unsupported array container [unsupported]. Expected one of [array, collection].');
 
 it('can be used as an Eloquent cast', function () {
     $model = new TestModel;

@@ -7,7 +7,7 @@ namespace AndreaColzani\PgArray\Casts;
 use AndreaColzani\PgArray\Casts\Values\VectorCaster;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
-use InvalidArgumentException;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
 
 /**
  * Array of pgvector values (vector[] column), retrieved as Types\Vector.
@@ -24,7 +24,7 @@ final class AsVectorArray extends PgArrayCastable
         $dimensions = $arguments[1] ?? null;
 
         if ($dimensions !== null && ! ctype_digit($dimensions)) {
-            throw new InvalidArgumentException(
+            throw new InvalidDefinitionException(
                 "Invalid vector dimensions [{$dimensions}].",
             );
         }
@@ -33,9 +33,7 @@ final class AsVectorArray extends PgArrayCastable
             type: $dimensions === null
                 ? PgArrayCast::Vector
                 : new VectorCaster((int) $dimensions),
-            container: PgArrayContainer::from(
-                $arguments[0] ?? PgArrayContainer::Array->value,
-            ),
+            container: PgArrayContainer::fromCastArgument($arguments[0] ?? null),
         );
     }
 

@@ -14,6 +14,8 @@ use Illuminate\Database\Grammar;
  *
  * The literal is escaped and inlined: update() does not support bindings
  * inside expressions.
+ *
+ * @internal
  */
 final class PgArrayConcatenation implements Expression
 {

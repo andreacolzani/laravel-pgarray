@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\AbstractCarbonCaster;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 
@@ -63,4 +64,4 @@ it('preserves null values', function (): void {
 
 it('rejects unsupported values', function (): void {
     $this->caster->set(123);
-})->throws(InvalidArgumentException::class);
+})->throws(InvalidValueException::class);

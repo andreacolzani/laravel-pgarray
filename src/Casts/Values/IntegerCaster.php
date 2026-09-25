@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+/**
+ * @internal
+ */
 final class IntegerCaster implements PgArrayValueCaster
 {
     public function get(mixed $value): ?int

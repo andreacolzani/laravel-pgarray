@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Database\Eloquent\Model;
-use UnexpectedValueException;
 
 /**
  * Encrypts and decrypts individual array elements around another caster.
@@ -28,6 +28,8 @@ use UnexpectedValueException;
  * (Model::encryptUsing()), falling back to the application encrypter, so
  * custom encrypters and previous keys work as with Laravel's encrypted casts.
  * NULL elements are not encrypted.
+ *
+ * @internal
  */
 final class EncryptedCaster implements PgArrayValueCaster
 {
@@ -65,7 +67,7 @@ final class EncryptedCaster implements PgArrayValueCaster
         return match (true) {
             is_bool($value) => $value ? 't' : 'f',
             is_scalar($value) => (string) $value,
-            default => throw new UnexpectedValueException(sprintf(
+            default => throw new InvalidValueException(sprintf(
                 'Unable to encrypt [%s]: element casters must return a scalar value or null.',
                 get_debug_type($value),
             )),

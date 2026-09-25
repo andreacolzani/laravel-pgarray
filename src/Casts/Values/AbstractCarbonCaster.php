@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Carbon\Carbon;
 use DateTimeInterface;
-use InvalidArgumentException;
 
+/**
+ * @internal
+ */
 abstract class AbstractCarbonCaster implements PgArrayValueCaster
 {
     public function set(mixed $value): ?string
@@ -34,7 +37,7 @@ abstract class AbstractCarbonCaster implements PgArrayValueCaster
             return Carbon::parse($value);
         }
 
-        throw new InvalidArgumentException(
+        throw new InvalidValueException(
             sprintf(
                 '%s expects a string or DateTimeInterface.',
                 static::class,

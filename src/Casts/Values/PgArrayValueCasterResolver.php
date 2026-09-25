@@ -10,6 +10,7 @@ use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
 use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
+use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use AndreaColzani\PgArray\Support\PgArrayParser;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
 use BackedEnum;
@@ -47,6 +48,8 @@ use UnitEnum;
  * delimiter() resolves the array delimiter the same way: the one declared
  * (PgArrayDelimited) by the caster, or by the serializer, then the class of
  * a class-string; ',' otherwise, and always for encrypted elements (text[]).
+ *
+ * @internal
  */
 final class PgArrayValueCasterResolver
 {

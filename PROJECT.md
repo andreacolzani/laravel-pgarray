@@ -50,6 +50,7 @@ Alla fine dell'ultima fase di sviluppo:
 - `Database\PgArrayTypeDefinition` (Milestone 11): definizione a livello DB di un `PgArrayType` con type modifier validati (`varchar(n)`, `char(n)`, `decimal(p,s)` / `numeric(p,s)`, precisione temporale, `vector(n)`, `geometry` / `geography(subtype, srid)`), con rendering `toSql()` / `toArraySql()`; non influenza i cast Eloquent, usata dal migration helper (Milestone 12)
 - migration helper `$table->pgArray($column, PgArrayType|PgArrayTypeDefinition)` (Milestone 12): macro `Blueprint` + macro `typePgArray` sul grammar PostgreSQL (`Database\PgArraySchema`), `Database\PgArrayColumnDefinition` con modificatori chained validati (`length()`, `precision()`, `size()`, `subtype()` / `srid()`, `dimensions()`, `withoutNullElements()` via CHECK), default da array PHP / Collection (`Database\PgArrayDefault`, `'{...}'::type[]`), `change()` / `using()` / `dropColumn()` nativi; test di integrazione PostgreSQL reali (`tests/Integration`, gruppo `pgsql`, connessione `PGARRAY_DB_*`, skip se non disponibile salvo `PGARRAY_REQUIRE_DB=true`) eseguiti sempre in CI (job `integration` con PostGIS + pgvector)
 - `EnumCaster`: supporto automatico ai `BackedEnum` (string/int) via `AsPgArray::of(Status::class)`; pure enum rifiutati con `UnsupportedElementException::pureEnum()` (Milestone 4)
+- audit della API pubblica (Milestone 16): eccezioni nel namespace `Exceptions` con interfaccia marker `PgArrayException` (`UnsupportedElementException`, `InvalidDefinitionException`, `InvalidValueException`, `UnsupportedDriverException`, ognuna estende l'eccezione SPL della sua categoria); classi di implementazione marcate `@internal` (`Casts\PgArray`, `Casts\Values\*`, `Database\PgArraySchema` / `PgArrayQuery` / `PgArrayConcatenation` / `PgArrayDefault`, `Support\PgArrayParser` / `PgArrayLiteral`); rimossi la classe root `PgArray` e la Facade dello skeleton; `declare(strict_types=1)` ovunque (verificato da arch test)
 - castable specifici implementati per: Boolean, Integer, String, Decimal, Float, Double, Real, Stringable, Date, DateTime, ImmutableDate, ImmutableDateTime, Uri, Ulid, Uuid
 - container `array` e `Collection` supportati
 - gestione `null` implementata
@@ -1096,17 +1097,12 @@ Questo è stato deciso intenzionalmente.
 
 # 29. Validation of `AsPgArray`
 
-Gli argomenti vengono convertiti tramite enum:
-
-```php
-PgArrayCast::from(...)
-PgArrayContainer::from(...)
-```
-
-Quindi valori non supportati devono produrre:
+Gli argomenti vengono validati senza propagare `ValueError` (Milestone 16):
 
 ```text
-ValueError
+tipo sconosciuto        → Exceptions\UnsupportedElementException
+container non valido    → Exceptions\InvalidDefinitionException (PgArrayContainer::fromCastArgument())
+modifier non valido     → Exceptions\InvalidDefinitionException
 ```
 
 Sono già presenti test per:

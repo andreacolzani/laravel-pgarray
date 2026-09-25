@@ -16,9 +16,7 @@ final class AsIntegerArray extends PgArrayCastable
     {
         return new PgArray(
             type: PgArrayCast::Integer,
-            container: PgArrayContainer::from(
-                $arguments[0] ?? PgArrayContainer::Array->value,
-            ),
+            container: PgArrayContainer::fromCastArgument($arguments[0] ?? null),
         );
     }
 }

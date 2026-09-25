@@ -6,6 +6,8 @@ use AndreaColzani\PgArray\Database\PgArrayColumnDefinition;
 use AndreaColzani\PgArray\Database\PgArrayDefault;
 use AndreaColzani\PgArray\Database\PgArrayTypeDefinition;
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use Illuminate\Database\Query\Expression;
@@ -76,7 +78,7 @@ it('has one dimension and allows null elements by default', function (): void {
 });
 
 it('rejects modifiers not supported by the type', function (Closure $modifier, string $message): void {
-    expect($modifier)->toThrow(InvalidArgumentException::class, $message);
+    expect($modifier)->toThrow(InvalidDefinitionException::class, $message);
 })->with([
     'length' => [fn () => pgArrayColumn(PgArrayType::Text)->length(5), 'length() is only supported by char, varchar, [text] given.'],
     'precision' => [fn () => pgArrayColumn(PgArrayType::Integer)->precision(5), 'precision() is only supported by decimal, numeric, time, timetz, timestamp, timestamptz, [integer] given.'],
@@ -87,7 +89,7 @@ it('rejects modifiers not supported by the type', function (Closure $modifier, s
 ]);
 
 it('validates modifier values', function (Closure $modifier, string $message): void {
-    expect($modifier)->toThrow(InvalidArgumentException::class, $message);
+    expect($modifier)->toThrow(InvalidDefinitionException::class, $message);
 })->with([
     'length' => [fn () => pgArrayColumn(PgArrayType::Varchar)->length(0), 'Invalid [varchar] type definition'],
     'scale' => [fn () => pgArrayColumn(PgArrayType::Decimal)->precision(2, 5), 'scale [5] cannot be greater than precision [2]'],
@@ -144,4 +146,4 @@ it('keeps non-array defaults unchanged', function (mixed $value): void {
 
 it('rejects unsupported default elements', function (): void {
     pgArrayColumn(PgArrayType::Text)->default([new stdClass]);
-})->throws(InvalidArgumentException::class, 'Unsupported PostgreSQL array element of type [stdClass].');
+})->throws(InvalidValueException::class, 'Unsupported PostgreSQL array element of type [stdClass].');

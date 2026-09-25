@@ -14,7 +14,11 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-/** @implements CastsAttributes<array<int, mixed>|Collection<int, mixed>|null, array<int, mixed>|Collection<int, mixed>> */
+/**
+ * @internal
+ *
+ * @implements CastsAttributes<array<int, mixed>|Collection<int, mixed>|null, array<int, mixed>|Collection<int, mixed>>
+ */
 final class PgArray implements CastsAttributes
 {
     private readonly PgArrayValueCaster $caster;

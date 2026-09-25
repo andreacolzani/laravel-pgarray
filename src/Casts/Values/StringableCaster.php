@@ -6,6 +6,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use Illuminate\Support\Stringable;
 
+/**
+ * @internal
+ */
 final class StringableCaster implements PgArrayValueCaster
 {
     public function get(mixed $value): ?Stringable

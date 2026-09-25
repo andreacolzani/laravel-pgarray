@@ -6,8 +6,8 @@ namespace AndreaColzani\PgArray\Types;
 
 use AndreaColzani\PgArray\Contracts\PgArrayDelimited;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use JsonSerializable;
-use UnexpectedValueException;
 
 /**
  * Immutable 2D spatial point for PostGIS geometry[] / geography[] columns.
@@ -43,11 +43,11 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
         public readonly int $srid = 4326,
     ) {
         if (! is_finite($latitude) || ! is_finite($longitude)) {
-            throw new UnexpectedValueException('Point coordinates must be finite numbers.');
+            throw new InvalidValueException('Point coordinates must be finite numbers.');
         }
 
         if ($srid < 0) {
-            throw new UnexpectedValueException("Invalid SRID [{$srid}].");
+            throw new InvalidValueException("Invalid SRID [{$srid}].");
         }
     }
 
@@ -74,7 +74,7 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
     public static function fromPgArrayValue(mixed $value): static
     {
         if (! is_string($value)) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to create a point from [%s].',
                 get_debug_type($value),
             ));
@@ -94,7 +94,7 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
             return self::fromEwkb((string) hex2bin($value));
         }
 
-        throw new UnexpectedValueException("Invalid point value [{$value}].");
+        throw new InvalidValueException("Invalid point value [{$value}].");
     }
 
     /**
@@ -115,14 +115,14 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
         $littleEndian = match ($wkb[0]) {
             "\x01" => true,
             "\x00" => false,
-            default => throw new UnexpectedValueException('Invalid EWKB byte order.'),
+            default => throw new InvalidValueException('Invalid EWKB byte order.'),
         };
 
         $offset = 1;
         $type = self::readUnsignedInt($wkb, $offset, $littleEndian);
 
         if (($type & (self::EWKB_Z | self::EWKB_M)) !== 0 || ($type & 0x0FFFFFFF) !== self::WKB_POINT) {
-            throw new UnexpectedValueException('Only 2D EWKB points are supported.');
+            throw new InvalidValueException('Only 2D EWKB points are supported.');
         }
 
         $srid = ($type & self::EWKB_SRID) !== 0
@@ -165,8 +165,8 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
         return $value === false ? null : $value[1];
     }
 
-    private static function invalidLength(): UnexpectedValueException
+    private static function invalidLength(): InvalidValueException
     {
-        return new UnexpectedValueException('Invalid EWKB point length.');
+        return new InvalidValueException('Invalid EWKB point length.');
     }
 }

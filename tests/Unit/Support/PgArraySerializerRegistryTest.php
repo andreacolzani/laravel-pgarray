@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
+use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
 use AndreaColzani\PgArray\Tests\Fixtures\CountryCode;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;

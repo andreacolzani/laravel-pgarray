@@ -1,5 +1,7 @@
 <?php
 
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Support\PgArrayParser;
 
 describe('parse', function () {
@@ -140,5 +142,15 @@ describe('delimiter', function () {
     it('rejects invalid delimiters', function (string $delimiter) {
         PgArrayParser::serialize(['a'], $delimiter);
     })->with(['', '::', '{', '}', '"', '\\', ' ', "\n"])
-        ->throws(InvalidArgumentException::class, 'Invalid PostgreSQL array delimiter');
+        ->throws(InvalidDefinitionException::class, 'Invalid PostgreSQL array delimiter');
 });
+
+it('rejects malformed array representations', function (string $value, string $message) {
+    PgArrayParser::parse($value);
+})->with([
+    'empty' => ['', 'The PostgreSQL array cannot be empty.'],
+    'not an array' => ['a,b', 'Invalid PostgreSQL array representation.'],
+    'unterminated' => ['{a,b', 'Unterminated PostgreSQL array representation.'],
+    'unterminated quoted value' => ['{"a', 'Unterminated quoted value in PostgreSQL array.'],
+    'garbage after a quoted value' => ['{"a"b}', 'Invalid PostgreSQL array representation.'],
+])->throws(InvalidValueException::class);

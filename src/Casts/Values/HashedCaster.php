@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Illuminate\Support\Facades\Hash;
-use RuntimeException;
 use SensitiveParameter;
 use Stringable;
-use UnexpectedValueException;
 
 /**
  * Hashes individual array elements.
@@ -23,6 +22,8 @@ use UnexpectedValueException;
  * hashed are stored unchanged, so hashes read from the database can be
  * assigned again without being hashed twice; they must match the configured
  * hashing algorithm. NULL elements are not hashed.
+ *
+ * @internal
  */
 final class HashedCaster implements PgArrayValueCaster
 {
@@ -38,7 +39,7 @@ final class HashedCaster implements PgArrayValueCaster
         }
 
         if (! is_string($value) && ! is_int($value) && ! is_float($value) && ! $value instanceof Stringable) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to hash [%s].',
                 get_debug_type($value),
             ));
@@ -53,7 +54,7 @@ final class HashedCaster implements PgArrayValueCaster
         // Same check as Laravel's hashed cast; HashManager documents the hash as an array.
         /** @phpstan-ignore argument.type */
         if (! Hash::verifyConfiguration($value)) {
-            throw new RuntimeException("Could not verify the hashed value's configuration.");
+            throw new InvalidValueException("Could not verify the hashed value's configuration.");
         }
 
         return $value;

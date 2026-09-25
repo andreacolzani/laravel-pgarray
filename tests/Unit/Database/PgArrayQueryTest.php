@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use AndreaColzani\PgArray\Database\PgArrayTypeDefinition;
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
+use AndreaColzani\PgArray\Exceptions\UnsupportedDriverException;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -97,11 +99,11 @@ it('supports nested wheres', function (): void {
 
 it('rejects null values', function (): void {
     pgsqlQuery()->wherePgArrayContains('tags', null);
-})->throws(InvalidArgumentException::class, 'A PostgreSQL array value cannot be null.');
+})->throws(InvalidValueException::class, 'A PostgreSQL array value cannot be null.');
 
 it('is only supported by PostgreSQL', function (): void {
     DB::connection('testing')->table('posts')->wherePgArrayContains('tags', ['a']);
-})->throws(RuntimeException::class, 'wherePgArrayContains() is only supported by PostgreSQL, [Illuminate\Database\Query\Grammars\SQLiteGrammar] given.');
+})->throws(UnsupportedDriverException::class, 'wherePgArrayContains() requires PostgreSQL, [Illuminate\Database\Query\Grammars\SQLiteGrammar] given.');
 
 it('appends and prepends values', function (string $method, mixed $values, array $extra, string $sql): void {
     $queries = pgsqlPretend(fn () => pgsqlQuery()->where('id', 1)->{$method}('tags', $values, null, $extra));
@@ -124,12 +126,12 @@ it('casts appended values to the given type', function (): void {
 
 it('only appends with PostgreSQL', function (): void {
     DB::connection('testing')->table('posts')->pgArrayAppend('tags', ['a']);
-})->throws(RuntimeException::class, 'pgArrayAppend() is only supported by PostgreSQL, [Illuminate\Database\Query\Grammars\SQLiteGrammar] given.');
+})->throws(UnsupportedDriverException::class, 'pgArrayAppend() requires PostgreSQL, [Illuminate\Database\Query\Grammars\SQLiteGrammar] given.');
 
 it('does not add a where clause for invalid values', function (): void {
     $query = pgsqlQuery();
 
-    expect(fn () => $query->wherePgArrayContains('tags', [new stdClass]))->toThrow(InvalidArgumentException::class)
+    expect(fn () => $query->wherePgArrayContains('tags', [new stdClass]))->toThrow(InvalidValueException::class)
         ->and($query->wheres)->toBe([])
         ->and($query->getBindings())->toBe([]);
 });

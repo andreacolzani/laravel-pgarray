@@ -1,9 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray\Enums;
 
 use AndreaColzani\PgArray\Support\PgArrayParser;
 
+/**
+ * PostgreSQL element types, used by the pgArray() migration helper and the
+ * query builder operators, e.g. $table->pgArray('tags', PgArrayType::Text).
+ *
+ * Type modifiers (varchar(50), numeric(10,2), …) are declared through
+ * PgArrayTypeDefinition or the pgArray() column modifiers.
+ */
 enum PgArrayType: string
 {
     case Char = 'char';

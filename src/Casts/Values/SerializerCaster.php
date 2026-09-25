@@ -6,7 +6,7 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Contracts\PgArrayJsonSerializer;
 use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
-use UnexpectedValueException;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 
 /**
  * Casts array elements to and from a class through an external serializer.
@@ -20,6 +20,8 @@ use UnexpectedValueException;
  * On set(), raw values that are not yet instances of the class are normalized
  * through deserialize() first, so the serializer can validate them. Objects of
  * any other class are rejected.
+ *
+ * @internal
  */
 final class SerializerCaster implements PgArrayValueCaster
 {
@@ -49,7 +51,7 @@ final class SerializerCaster implements PgArrayValueCaster
         }
 
         if (is_object($value) && ! $value instanceof $this->class) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to [%s].',
                 get_debug_type($value),
                 $this->class,
@@ -68,7 +70,7 @@ final class SerializerCaster implements PgArrayValueCaster
         $object = $this->serializer->deserialize($value, $this->class);
 
         if (! $object instanceof $this->class) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 '[%s]::deserialize() must return an instance of [%s], [%s] given.',
                 $this->serializer::class,
                 $this->class,
@@ -87,7 +89,7 @@ final class SerializerCaster implements PgArrayValueCaster
             return $value;
         }
 
-        throw new UnexpectedValueException(sprintf(
+        throw new InvalidValueException(sprintf(
             '[%s]::serialize() must return a scalar value or null, [%s] given. Implement [%s] to store structured values as JSON.',
             $this->serializer::class,
             get_debug_type($value),

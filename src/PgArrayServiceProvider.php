@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray;
 
 use AndreaColzani\PgArray\Database\PgArrayQuery;
@@ -9,15 +11,14 @@ use Illuminate\Contracts\Container\Container;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class PgArrayServiceProvider extends PackageServiceProvider
+/**
+ * Registers the serializer registry, the pgArray() migration helper and the
+ * query builder macros.
+ */
+final class PgArrayServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('laravel-pgarray')
             ->hasConfigFile();

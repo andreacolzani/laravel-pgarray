@@ -6,7 +6,7 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
-use UnexpectedValueException;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 
 /**
  * Casts array elements to and from a PgArrayValue implementation.
@@ -19,6 +19,8 @@ use UnexpectedValueException;
  * On set(), raw values that are not yet instances of the class are normalized
  * through fromPgArrayValue() first, so the class can validate them. Objects of
  * any other class are rejected.
+ *
+ * @internal
  */
 final class ObjectCaster implements PgArrayValueCaster
 {
@@ -47,7 +49,7 @@ final class ObjectCaster implements PgArrayValueCaster
         }
 
         if (is_object($value) && ! $value instanceof $this->class) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to [%s].',
                 get_debug_type($value),
                 $this->class,
@@ -69,7 +71,7 @@ final class ObjectCaster implements PgArrayValueCaster
             return $value;
         }
 
-        throw new UnexpectedValueException(sprintf(
+        throw new InvalidValueException(sprintf(
             '[%s]::toPgArrayValue() must return a scalar value or null, [%s] given. Implement [%s] to store structured values as JSON.',
             $object::class,
             get_debug_type($value),

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Support\PgArrayLiteral;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
@@ -35,11 +36,11 @@ it('builds PostgreSQL array literals', function (mixed $values, string $literal)
 
 it('rejects null values', function (): void {
     PgArrayLiteral::from(null);
-})->throws(InvalidArgumentException::class, 'A PostgreSQL array value cannot be null.');
+})->throws(InvalidValueException::class, 'A PostgreSQL array value cannot be null.');
 
 it('rejects unsupported elements', function (): void {
     PgArrayLiteral::from([new stdClass]);
-})->throws(InvalidArgumentException::class, 'Unsupported PostgreSQL array element of type [stdClass].');
+})->throws(InvalidValueException::class, 'Unsupported PostgreSQL array element of type [stdClass].');
 
 it('builds literals with the delimiter of the element type', function (): void {
     expect(PgArrayLiteral::from(['POINT(1 2)', 'POINT(3 4)'], ':'))->toBe('{"POINT(1 2)":"POINT(3 4)"}');

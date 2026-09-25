@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Stringable;
-use UnexpectedValueException;
 
 /**
  * Casts macaddr array elements (6-byte MAC addresses).
@@ -16,6 +16,8 @@ use UnexpectedValueException;
  * Accepts the input formats supported by PostgreSQL:
  * 08:00:2b:01:02:03, 08-00-2b-01-02-03, 08002b:010203, 08002b-010203,
  * 0800.2b01.0203, 0800-2b01-0203 and 08002b010203 (case-insensitive).
+ *
+ * @internal
  */
 final class MacAddrCaster implements PgArrayValueCaster
 {
@@ -40,7 +42,7 @@ final class MacAddrCaster implements PgArrayValueCaster
         }
 
         if (! is_string($value) && ! $value instanceof Stringable) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to macaddr.',
                 get_debug_type($value),
             ));
@@ -56,6 +58,6 @@ final class MacAddrCaster implements PgArrayValueCaster
             }
         }
 
-        throw new UnexpectedValueException("Invalid macaddr value [{$value}].");
+        throw new InvalidValueException("Invalid macaddr value [{$value}].");
     }
 }

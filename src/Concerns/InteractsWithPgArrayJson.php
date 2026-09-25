@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Concerns;
 
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use BackedEnum;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
-use UnexpectedValueException;
 
 /**
  * Default JSON serialization for PgArrayJsonValue implementations.
@@ -40,7 +40,7 @@ trait InteractsWithPgArrayJson
     public static function fromPgArrayValue(mixed $value): static
     {
         if (! is_array($value)) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to create [%s] from [%s]: expected a JSON object.',
                 static::class,
                 get_debug_type($value),
@@ -77,7 +77,11 @@ trait InteractsWithPgArrayJson
         }
 
         if (is_subclass_of($class, BackedEnum::class) && (is_int($value) || is_string($value))) {
-            return $class::from($value);
+            return $class::tryFrom($value) ?? throw new InvalidValueException(sprintf(
+                'Unable to cast [%s] to enum [%s].',
+                $value,
+                $class,
+            ));
         }
 
         return $value;

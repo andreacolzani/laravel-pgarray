@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Database;
 
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\UnsupportedDriverException;
 use Illuminate\Database\Grammar;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Fluent;
-use RuntimeException;
 
 /**
  * Registers the pgArray() migration helper:
  *
  *   $table->pgArray('tags', PgArrayType::Text);
  *   $table->pgArray('codes', PgArrayType::Varchar)->length(50)->nullable();
+ *
+ * @internal
  */
 final class PgArraySchema
 {
@@ -48,21 +51,18 @@ final class PgArraySchema
     public static function compileType(Grammar $grammar, Fluent $column): string
     {
         if (! $grammar instanceof PostgresGrammar) {
-            throw new RuntimeException(sprintf(
-                'pgArray() columns are only supported by PostgreSQL, [%s] given.',
-                $grammar::class,
-            ));
+            throw UnsupportedDriverException::for('pgArray()', $grammar);
         }
 
         if (! $column instanceof PgArrayColumnDefinition) {
-            throw new RuntimeException('pgArray() columns must be declared with the pgArray() helper.');
+            throw new InvalidDefinitionException('pgArray() columns must be declared with the pgArray() helper.');
         }
 
         $sql = $column->toArraySql();
 
         if ($column->get('change')) {
             if ($column->forbidsNullElements()) {
-                throw new RuntimeException(
+                throw new InvalidDefinitionException(
                     'withoutNullElements() cannot be used when changing a column: add the CHECK constraint separately.',
                 );
             }
@@ -90,7 +90,7 @@ final class PgArraySchema
         }
 
         if ($column->get('collation') !== null) {
-            throw new RuntimeException(
+            throw new InvalidDefinitionException(
                 'using() cannot be combined with collation() when changing a pgArray() column: change the collation separately.',
             );
         }

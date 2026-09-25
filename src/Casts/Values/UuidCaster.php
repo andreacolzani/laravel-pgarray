@@ -7,6 +7,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
+/**
+ * @internal
+ */
 final class UuidCaster implements PgArrayValueCaster
 {
     public function get(mixed $value): ?UuidInterface

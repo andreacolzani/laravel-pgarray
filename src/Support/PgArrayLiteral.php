@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Support;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use BackedEnum;
 use DateTimeInterface;
 use Illuminate\Contracts\Support\Arrayable;
-use InvalidArgumentException;
 use Stringable;
 
 /**
  * Builds PostgreSQL array literals (e.g. {a,b}) from PHP values, as used by
  * pgArray() column defaults and query builder operators.
+ *
+ * @internal
  */
 final class PgArrayLiteral
 {
@@ -35,7 +37,7 @@ final class PgArrayLiteral
     public static function normalize(mixed $values): array
     {
         if ($values === null) {
-            throw new InvalidArgumentException('A PostgreSQL array value cannot be null.');
+            throw new InvalidValueException('A PostgreSQL array value cannot be null.');
         }
 
         if ($values instanceof Arrayable) {
@@ -53,7 +55,7 @@ final class PgArrayLiteral
             $element instanceof DateTimeInterface => $element->format('Y-m-d H:i:s.uP'),
             $element instanceof Stringable => (string) $element,
             $element === null, is_string($element), is_int($element), is_float($element), is_bool($element) => $element,
-            default => throw new InvalidArgumentException(sprintf(
+            default => throw new InvalidValueException(sprintf(
                 'Unsupported PostgreSQL array element of type [%s].',
                 get_debug_type($element),
             )),

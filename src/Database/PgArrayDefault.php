@@ -14,6 +14,8 @@ use Illuminate\Database\Grammar;
  *
  * The cast is rendered when the migration is compiled, so the column type
  * modifiers can be declared before or after default().
+ *
+ * @internal
  */
 final class PgArrayDefault implements Expression
 {

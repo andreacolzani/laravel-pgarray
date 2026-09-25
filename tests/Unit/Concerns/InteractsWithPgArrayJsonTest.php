@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Contact;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
@@ -72,3 +73,10 @@ it('can be partially overridden by the class', function (): void {
         ->and(Profile::fromPgArrayValue($profile->toPgArrayValue()))
         ->toEqual(new Profile('john'));
 });
+
+it('rejects values that do not match a backed enum case', function (): void {
+    Contact::fromPgArrayValue(['name' => 'John', 'priority' => 9]);
+})->throws(
+    InvalidValueException::class,
+    'Unable to cast [9] to enum ['.Priority::class.'].',
+);

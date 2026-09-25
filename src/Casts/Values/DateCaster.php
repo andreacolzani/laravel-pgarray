@@ -6,6 +6,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use Carbon\Carbon;
 
+/**
+ * @internal
+ */
 final class DateCaster extends AbstractCarbonCaster
 {
     public function get(mixed $value): ?Carbon

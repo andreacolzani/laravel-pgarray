@@ -14,6 +14,8 @@ use AndreaColzani\PgArray\Enums\PgArrayCast;
  * VectorCaster with dimensions), and whether each element is encrypted.
  * It is used by PgArrayValueCasterResolver to route resolution to the
  * appropriate caster.
+ *
+ * @internal
  */
 final class PgArrayElementDefinition
 {

@@ -16,9 +16,7 @@ final class AsImmutableDateArray extends PgArrayCastable
     {
         return new PgArray(
             type: PgArrayCast::ImmutableDate,
-            container: PgArrayContainer::from(
-                $arguments[0] ?? PgArrayContainer::Array->value,
-            ),
+            container: PgArrayContainer::fromCastArgument($arguments[0] ?? null),
         );
     }
 }

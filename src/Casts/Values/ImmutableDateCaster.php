@@ -6,6 +6,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use Carbon\CarbonImmutable;
 
+/**
+ * @internal
+ */
 final class ImmutableDateCaster extends AbstractCarbonCaster
 {
     public function get(mixed $value): ?CarbonImmutable

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Support;
 
 use AndreaColzani\PgArray\Attributes\PgArraySerializer;
-use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Contracts\PgArraySerializable;
 use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
+use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use Illuminate\Contracts\Container\Container;
 use ReflectionClass;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AndreaColzani\PgArray\Casts\Values;
+namespace AndreaColzani\PgArray\Exceptions;
 
 use InvalidArgumentException;
 
@@ -10,7 +10,7 @@ use InvalidArgumentException;
  * Thrown when the PgArrayValueCasterResolver cannot resolve an element type
  * to a supported PgArrayValueCaster.
  */
-final class UnsupportedElementException extends InvalidArgumentException
+final class UnsupportedElementException extends InvalidArgumentException implements PgArrayException
 {
     public static function unknownClass(string $type): self
     {

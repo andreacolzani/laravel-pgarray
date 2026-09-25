@@ -5,6 +5,8 @@ declare(strict_types=1);
 use AndreaColzani\PgArray\Database\PgArrayColumnDefinition;
 use AndreaColzani\PgArray\Database\PgArrayTypeDefinition;
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\UnsupportedDriverException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -134,13 +136,13 @@ it('does not change a column with both a casting expression and a collation', fu
     pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
         $table->pgArray('tags', PgArrayType::Text)->using('tags::text[]')->collation('C')->change();
     }));
-})->throws(RuntimeException::class, 'using() cannot be combined with collation()');
+})->throws(InvalidDefinitionException::class, 'using() cannot be combined with collation()');
 
 it('does not change a column forbidding null elements', function (): void {
     pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
         $table->pgArray('tags', PgArrayType::Text)->withoutNullElements()->change();
     }));
-})->throws(RuntimeException::class, 'withoutNullElements() cannot be used when changing a column');
+})->throws(InvalidDefinitionException::class, 'withoutNullElements() cannot be used when changing a column');
 
 it('drops array columns', function (): void {
     $queries = pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
@@ -154,10 +156,10 @@ it('rejects other database drivers', function (): void {
     DB::connection()->pretend(fn () => Schema::create('posts', function (Blueprint $table): void {
         $table->pgArray('tags', PgArrayType::Text);
     }));
-})->throws(RuntimeException::class, 'pgArray() columns are only supported by PostgreSQL');
+})->throws(UnsupportedDriverException::class, 'pgArray() requires PostgreSQL');
 
 it('rejects array columns declared without the helper', function (): void {
     pgsqlSchemaSql(fn ($schema) => $schema->create('posts', function (Blueprint $table): void {
         $table->addColumn('pgArray', 'tags');
     }));
-})->throws(RuntimeException::class, 'pgArray() columns must be declared with the pgArray() helper.');
+})->throws(InvalidDefinitionException::class, 'pgArray() columns must be declared with the pgArray() helper.');

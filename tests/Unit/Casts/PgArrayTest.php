@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\PgArray;
-use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Cents;
 use AndreaColzani\PgArray\Tests\Fixtures\Color;

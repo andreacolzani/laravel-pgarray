@@ -6,6 +6,9 @@ namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 
+/**
+ * @internal
+ */
 final class PgArrayValueCasterFactory
 {
     public static function make(PgArrayCast $type): PgArrayValueCaster

@@ -4,12 +4,23 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts;
 
-use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use Illuminate\Contracts\Database\Eloquent\Castable;
-use InvalidArgumentException;
 
+/**
+ * Generic PostgreSQL array cast, for any element type.
+ *
+ *   'scores'   => AsPgArray::of(PgArrayCast::Integer),
+ *   'statuses' => AsPgArray::of(Status::class, PgArrayContainer::Collection),
+ *   'secrets'  => AsPgArray::encrypted(PgArrayCast::Date),
+ *
+ * Element types are PgArrayCast values or classes: PgArrayValue /
+ * PgArrayJsonValue implementations, backed enums, or classes mapped to an
+ * external serializer. Without arguments, elements are strings.
+ */
 final class AsPgArray implements Castable
 {
     private const ENCRYPTED = 'encrypted';
@@ -21,9 +32,7 @@ final class AsPgArray implements Castable
      */
     public static function castUsing(array $arguments): PgArray
     {
-        $container = PgArrayContainer::from(
-            $arguments[1] ?? PgArrayContainer::Array->value,
-        );
+        $container = PgArrayContainer::fromCastArgument($arguments[1] ?? null);
 
         return new PgArray(
             type: self::resolveType($arguments[0] ?? PgArrayCast::String->value),
@@ -75,13 +84,14 @@ final class AsPgArray implements Castable
     }
 
     /**
-     * Built-in cast values take precedence over class-strings. Anything else
-     * is rejected by PgArrayCast::from() with a ValueError.
+     * Built-in cast values take precedence over class-strings.
+     *
+     * @throws UnsupportedElementException
      */
     private static function resolveType(string $type): PgArrayCast|string
     {
         return PgArrayCast::tryFrom($type)
-            ?? (class_exists($type) ? $type : PgArrayCast::from($type));
+            ?? (class_exists($type) ? $type : throw UnsupportedElementException::unknownClass($type));
     }
 
     private static function resolveEncrypted(?string $modifier): bool
@@ -91,7 +101,7 @@ final class AsPgArray implements Castable
         }
 
         if ($modifier !== self::ENCRYPTED) {
-            throw new InvalidArgumentException(
+            throw new InvalidDefinitionException(
                 "Unsupported element modifier [{$modifier}]. Expected [".self::ENCRYPTED.'].',
             );
         }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Database;
 
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Schema\ColumnDefinition;
-use InvalidArgumentException;
 
 /**
  * Column definition returned by the pgArray() migration helper.
@@ -37,23 +37,35 @@ final class PgArrayColumnDefinition extends ColumnDefinition
         $this->attributes['pgArrayWithoutNullElements'] = false;
     }
 
+    /**
+     * @internal
+     */
     public function definition(): PgArrayTypeDefinition
     {
         /** @var PgArrayTypeDefinition */
         return $this->attributes['pgArrayDefinition'];
     }
 
+    /**
+     * @internal
+     */
     public function arrayDimensions(): int
     {
         /** @var int */
         return $this->attributes['pgArrayDimensions'];
     }
 
+    /**
+     * @internal
+     */
     public function forbidsNullElements(): bool
     {
         return $this->attributes['pgArrayWithoutNullElements'] === true;
     }
 
+    /**
+     * @internal
+     */
     public function usingExpression(): string|Expression|null
     {
         /** @var string|Expression|null */
@@ -62,6 +74,8 @@ final class PgArrayColumnDefinition extends ColumnDefinition
 
     /**
      * The array type, e.g. varchar(50)[].
+     *
+     * @internal
      */
     public function toArraySql(): string
     {
@@ -95,7 +109,7 @@ final class PgArrayColumnDefinition extends ColumnDefinition
         );
 
         if ($scale !== null && ! in_array($type, [PgArrayType::Decimal, PgArrayType::Numeric], true)) {
-            throw new InvalidArgumentException("A scale is only supported by decimal and numeric, [{$type->value}] given.");
+            throw new InvalidDefinitionException("A scale is only supported by decimal and numeric, [{$type->value}] given.");
         }
 
         return $this->withParameters($scale === null ? [$precision] : [$precision, $scale]);
@@ -144,7 +158,7 @@ final class PgArrayColumnDefinition extends ColumnDefinition
     public function dimensions(int $dimensions): self
     {
         if ($dimensions < 1) {
-            throw new InvalidArgumentException("Array dimensions must be greater than zero, [{$dimensions}] given.");
+            throw new InvalidDefinitionException("Array dimensions must be greater than zero, [{$dimensions}] given.");
         }
 
         if ($dimensions > 1 && $this->forbidsNullElements()) {
@@ -205,7 +219,7 @@ final class PgArrayColumnDefinition extends ColumnDefinition
         $type = $this->definition()->type;
 
         if (! in_array($type, $types, true)) {
-            throw new InvalidArgumentException(sprintf(
+            throw new InvalidDefinitionException(sprintf(
                 '%s is only supported by %s, [%s] given.',
                 $modifier,
                 implode(', ', array_map(static fn (PgArrayType $type): string => $type->value, $types)),
@@ -226,8 +240,8 @@ final class PgArrayColumnDefinition extends ColumnDefinition
         return $this;
     }
 
-    private static function multidimensionalNullElements(): InvalidArgumentException
+    private static function multidimensionalNullElements(): InvalidDefinitionException
     {
-        return new InvalidArgumentException('withoutNullElements() is only supported by one-dimensional arrays.');
+        return new InvalidDefinitionException('withoutNullElements() is only supported by one-dimensional arrays.');
     }
 }

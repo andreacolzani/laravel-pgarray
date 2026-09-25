@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Database;
 
 use AndreaColzani\PgArray\Enums\PgArrayType;
-use InvalidArgumentException;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
 use Stringable;
 
 /**
@@ -149,7 +149,7 @@ final class PgArrayTypeDefinition implements Stringable
     public function toArraySql(int $dimensions = 1): string
     {
         if ($dimensions < 1) {
-            throw new InvalidArgumentException(
+            throw new InvalidDefinitionException(
                 "Array dimensions must be greater than zero, [{$dimensions}] given.",
             );
         }
@@ -179,7 +179,7 @@ final class PgArrayTypeDefinition implements Stringable
     private static function numericParameters(?int $precision, ?int $scale): array
     {
         if ($precision === null && $scale !== null) {
-            throw new InvalidArgumentException('A numeric scale requires a precision.');
+            throw new InvalidDefinitionException('A numeric scale requires a precision.');
         }
 
         return self::parameters($precision, $scale);
@@ -315,8 +315,8 @@ final class PgArrayTypeDefinition implements Stringable
         return $base.strtoupper($matches[2] ?? '');
     }
 
-    private function invalid(string $reason): InvalidArgumentException
+    private function invalid(string $reason): InvalidDefinitionException
     {
-        return new InvalidArgumentException("Invalid [{$this->type->value}] type definition: {$reason}.");
+        return new InvalidDefinitionException("Invalid [{$this->type->value}] type definition: {$reason}.");
     }
 }

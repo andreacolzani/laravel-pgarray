@@ -16,9 +16,7 @@ final class AsUriArray extends PgArrayCastable
     {
         return new PgArray(
             type: PgArrayCast::Uri,
-            container: PgArrayContainer::from(
-                $arguments[0] ?? PgArrayContainer::Array->value,
-            ),
+            container: PgArrayContainer::fromCastArgument($arguments[0] ?? null),
         );
     }
 }

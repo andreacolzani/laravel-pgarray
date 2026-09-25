@@ -1,7 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray\Enums;
 
+/**
+ * Built-in element casts: how each element is converted between PHP and
+ * PostgreSQL, e.g. AsPgArray::of(PgArrayCast::Integer).
+ *
+ * Casts describe the PHP side of the conversion; the PostgreSQL column type
+ * is described by PgArrayType (migrations and query builder).
+ */
 enum PgArrayCast: string
 {
     case Boolean = 'boolean';

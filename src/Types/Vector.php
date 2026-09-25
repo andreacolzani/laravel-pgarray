@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Types;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Countable;
 use JsonSerializable;
 use Stringable;
-use UnexpectedValueException;
 
 /**
  * Immutable pgvector value ([1,2,3]) used as element of vector[] columns.
@@ -29,7 +29,7 @@ final class Vector implements Countable, JsonSerializable, Stringable
     public function __construct(array $values)
     {
         if ($values === []) {
-            throw new UnexpectedValueException('A vector must have at least one dimension.');
+            throw new InvalidValueException('A vector must have at least one dimension.');
         }
 
         $this->values = array_map(self::component(...), array_values($values));
@@ -40,7 +40,7 @@ final class Vector implements Countable, JsonSerializable, Stringable
         $value = trim($value);
 
         if (! str_starts_with($value, '[') || ! str_ends_with($value, ']')) {
-            throw new UnexpectedValueException("Invalid vector value [{$value}].");
+            throw new InvalidValueException("Invalid vector value [{$value}].");
         }
 
         $components = array_map(
@@ -48,7 +48,7 @@ final class Vector implements Countable, JsonSerializable, Stringable
                 $component = trim($component);
 
                 if (! is_numeric($component)) {
-                    throw new UnexpectedValueException("Invalid vector value [{$value}].");
+                    throw new InvalidValueException("Invalid vector value [{$value}].");
                 }
 
                 return (float) $component;
@@ -105,7 +105,7 @@ final class Vector implements Countable, JsonSerializable, Stringable
     private static function component(mixed $value): float
     {
         if ((! is_int($value) && ! is_float($value)) || ! is_finite((float) $value)) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Vector components must be finite numbers, [%s] given.',
                 is_float($value) ? var_export($value, true) : get_debug_type($value),
             ));

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Stringable;
-use UnexpectedValueException;
 
 /**
  * Casts inet array elements (IPv4 / IPv6 host address with optional prefix).
@@ -15,6 +15,8 @@ use UnexpectedValueException;
  *
  * Normalization matches the PostgreSQL output: IPv6 addresses are written in
  * compressed lowercase form and full-length prefixes (/32, /128) are omitted.
+ *
+ * @internal
  */
 final class InetCaster implements PgArrayValueCaster
 {
@@ -30,7 +32,7 @@ final class InetCaster implements PgArrayValueCaster
         }
 
         if (! is_string($value) && ! $value instanceof Stringable) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to inet.',
                 get_debug_type($value),
             ));
@@ -70,8 +72,8 @@ final class InetCaster implements PgArrayValueCaster
             : $address.'/'.(int) $prefix;
     }
 
-    private function invalid(string $value): UnexpectedValueException
+    private function invalid(string $value): InvalidValueException
     {
-        return new UnexpectedValueException("Invalid inet value [{$value}].");
+        return new InvalidValueException("Invalid inet value [{$value}].");
     }
 }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Contracts\PgArrayDelimited;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Types\Point;
 use Stringable;
-use UnexpectedValueException;
 
 /**
  * Passthrough caster for PostGIS geometry[] / geography[] elements.
@@ -19,6 +19,8 @@ use UnexpectedValueException;
  * points as objects, or an external serializer for richer geometries.
  *
  * PostGIS separates the elements of geometry[] / geography[] with ':'.
+ *
+ * @internal
  */
 final class GeometryCaster implements PgArrayDelimited, PgArrayValueCaster
 {
@@ -38,7 +40,7 @@ final class GeometryCaster implements PgArrayDelimited, PgArrayValueCaster
             $value === null => null,
             $value instanceof Point => $value->toPgArrayValue(),
             is_string($value), $value instanceof Stringable => (string) $value,
-            default => throw new UnexpectedValueException(sprintf(
+            default => throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to a geometry.',
                 get_debug_type($value),
             )),

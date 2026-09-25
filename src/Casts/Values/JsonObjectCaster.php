@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use JsonException;
-use UnexpectedValueException;
 
 /**
  * Casts json[] / jsonb[] elements to and from a PgArrayJsonValue implementation.
@@ -18,6 +18,8 @@ use UnexpectedValueException;
  * treated as null. On set(), raw JSON strings are normalized through
  * fromPgArrayValue() first, so the class can validate them. Objects of any
  * other class are rejected.
+ *
+ * @internal
  */
 final class JsonObjectCaster implements PgArrayValueCaster
 {
@@ -57,7 +59,7 @@ final class JsonObjectCaster implements PgArrayValueCaster
         }
 
         if (is_object($value) && ! $value instanceof $this->class) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to [%s].',
                 get_debug_type($value),
                 $this->class,
@@ -81,7 +83,7 @@ final class JsonObjectCaster implements PgArrayValueCaster
     private function fromJson(mixed $value): ?PgArrayJsonValue
     {
         if (! is_string($value)) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to [%s]: expected a JSON string.',
                 get_debug_type($value),
                 $this->class,

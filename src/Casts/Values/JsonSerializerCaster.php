@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Casts\Values;
 
 use AndreaColzani\PgArray\Contracts\PgArrayJsonSerializer;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use JsonException;
-use UnexpectedValueException;
 
 /**
  * Casts json[] / jsonb[] elements to and from a class through an external
@@ -19,6 +19,8 @@ use UnexpectedValueException;
  * treated as null. On set(), raw JSON strings are normalized through
  * deserialize() first, so the serializer can validate them. Objects of any
  * other class are rejected.
+ *
+ * @internal
  */
 final class JsonSerializerCaster implements PgArrayValueCaster
 {
@@ -54,7 +56,7 @@ final class JsonSerializerCaster implements PgArrayValueCaster
         }
 
         if (is_object($value) && ! $value instanceof $this->class) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to [%s].',
                 get_debug_type($value),
                 $this->class,
@@ -80,7 +82,7 @@ final class JsonSerializerCaster implements PgArrayValueCaster
     private function fromJson(mixed $value): ?object
     {
         if (! is_string($value)) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 'Unable to cast [%s] to [%s]: expected a JSON string.',
                 get_debug_type($value),
                 $this->class,
@@ -96,7 +98,7 @@ final class JsonSerializerCaster implements PgArrayValueCaster
         $object = $this->serializer->deserialize($decoded, $this->class);
 
         if (! $object instanceof $this->class) {
-            throw new UnexpectedValueException(sprintf(
+            throw new InvalidValueException(sprintf(
                 '[%s]::deserialize() must return an instance of [%s], [%s] given.',
                 $this->serializer::class,
                 $this->class,

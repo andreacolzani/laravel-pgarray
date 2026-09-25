@@ -39,8 +39,14 @@ return [
 ## Usage
 
 ```php
-$pgArray = new AndreaColzani\PgArray();
-echo $pgArray->echoPhrase('Hello, AndreaColzani!');
+use AndreaColzani\PgArray\Casts\AsStringArray;
+
+protected function casts(): array
+{
+    return [
+        'tags' => AsStringArray::class,
+    ];
+}
 ```
 
 ## Testing

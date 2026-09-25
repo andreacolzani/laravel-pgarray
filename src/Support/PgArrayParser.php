@@ -1,9 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray\Support;
 
-use InvalidArgumentException;
+use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 
+/**
+ * Parses and serializes the PostgreSQL array text representation
+ * ({a,"b c",NULL}, {{1,2},{3,4}}).
+ *
+ * Elements are parsed as strings (or null) and serialized from scalar
+ * values: converting them to PHP types is up to the element casters.
+ *
+ * @internal
+ */
 final class PgArrayParser
 {
     /**
@@ -20,7 +32,7 @@ final class PgArrayParser
     public static function parse(string $value, string $delimiter = self::DEFAULT_DELIMITER): array
     {
         if ($value === '') {
-            throw new InvalidArgumentException('The PostgreSQL array cannot be empty.');
+            throw new InvalidValueException('The PostgreSQL array cannot be empty.');
         }
 
         self::ensureDelimiter($delimiter);
@@ -47,12 +59,12 @@ final class PgArrayParser
      * A delimiter is a single character with no other meaning in the array
      * syntax, as PostgreSQL requires.
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidDefinitionException
      */
     public static function ensureDelimiter(string $delimiter): void
     {
         if (strlen($delimiter) !== 1 || str_contains("{}\"\\ \t\n\r\v\f", $delimiter)) {
-            throw new InvalidArgumentException("Invalid PostgreSQL array delimiter [{$delimiter}].");
+            throw new InvalidDefinitionException("Invalid PostgreSQL array delimiter [{$delimiter}].");
         }
     }
 
@@ -66,7 +78,7 @@ final class PgArrayParser
         string $delimiter,
     ): array {
         if ($position >= $length || $value[$position] !== '{') {
-            throw new InvalidArgumentException(
+            throw new InvalidValueException(
                 'Invalid PostgreSQL array representation.',
             );
         }
@@ -104,12 +116,12 @@ final class PgArrayParser
                 return $result;
             }
 
-            throw new InvalidArgumentException(
+            throw new InvalidValueException(
                 'Invalid PostgreSQL array representation.',
             );
         }
 
-        throw new InvalidArgumentException(
+        throw new InvalidValueException(
             'Unterminated PostgreSQL array representation.',
         );
     }
@@ -121,7 +133,7 @@ final class PgArrayParser
         string $delimiter,
     ): ?string {
         if ($position >= $length) {
-            throw new InvalidArgumentException(
+            throw new InvalidValueException(
                 'Unexpected end of PostgreSQL array.',
             );
         }
@@ -161,7 +173,7 @@ final class PgArrayParser
                 $position++;
 
                 if ($position >= $length) {
-                    throw new InvalidArgumentException(
+                    throw new InvalidValueException(
                         'Invalid escape sequence in PostgreSQL array.',
                     );
                 }
@@ -182,7 +194,7 @@ final class PgArrayParser
             $position++;
         }
 
-        throw new InvalidArgumentException(
+        throw new InvalidValueException(
             'Unterminated quoted value in PostgreSQL array.',
         );
     }
