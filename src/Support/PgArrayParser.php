@@ -26,7 +26,7 @@ final class PgArrayParser
     /**
      * Serialize a PHP array into a PostgreSQL array representation.
      *
-     * @param  array<int, string|int|bool|null|array<int, mixed>>  $value
+     * @param  array<int, string|int|float|bool|null|array<int, mixed>>  $value
      */
     public static function serialize(array $value): string
     {
@@ -162,7 +162,7 @@ final class PgArrayParser
     }
 
     /**
-     * @param  array<int, string|int|bool|null|array<int, mixed>>  $value
+     * @param  array<int, string|int|float|bool|null|array<int, mixed>>  $value
      */
     private static function serializeArray(array $value): string
     {
@@ -178,6 +178,7 @@ final class PgArrayParser
 
                 $item = match (true) {
                     is_bool($item) => $item ? 't' : 'f',
+                    is_float($item) => self::serializeFloat($item),
                     default => (string) $item,
                 };
 
@@ -187,6 +188,19 @@ final class PgArrayParser
         );
 
         return '{'.implode(',', $values).'}';
+    }
+
+    /**
+     * The shortest representation that round trips (serialize_precision = -1,
+     * as var_export()), since (string) only keeps 14 significant digits.
+     */
+    private static function serializeFloat(float $value): string
+    {
+        return match (true) {
+            is_nan($value) => 'NaN',
+            is_infinite($value) => $value > 0 ? 'Infinity' : '-Infinity',
+            default => var_export($value, true),
+        };
     }
 
     private static function serializeValue(string $value): string

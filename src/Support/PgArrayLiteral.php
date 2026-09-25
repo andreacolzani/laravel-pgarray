@@ -22,7 +22,7 @@ final class PgArrayLiteral
      */
     public static function from(mixed $values): string
     {
-        /** @var array<int, string|int|bool|null|array<int, mixed>> $normalized */
+        /** @var array<int, string|int|float|bool|null|array<int, mixed>> $normalized */
         $normalized = self::normalize($values);
 
         return PgArrayParser::serialize($normalized);
@@ -50,8 +50,8 @@ final class PgArrayLiteral
             $element instanceof BackedEnum => $element->value,
             // With the offset, like DateTimeCaster, so timestamptz compares the right instant.
             $element instanceof DateTimeInterface => $element->format('Y-m-d H:i:s.uP'),
-            $element instanceof Stringable, is_float($element) => (string) $element,
-            $element === null, is_string($element), is_int($element), is_bool($element) => $element,
+            $element instanceof Stringable => (string) $element,
+            $element === null, is_string($element), is_int($element), is_float($element), is_bool($element) => $element,
             default => throw new InvalidArgumentException(sprintf(
                 'Unsupported PostgreSQL array element of type [%s].',
                 get_debug_type($element),

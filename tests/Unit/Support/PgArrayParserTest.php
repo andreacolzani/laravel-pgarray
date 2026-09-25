@@ -63,6 +63,11 @@ describe('serialize', function () {
             ->toBe('{}');
     });
 
+    it('serializes floats without losing precision', function () {
+        expect(PgArrayParser::serialize([0.1 + 0.2, M_PI, 1.0, -0.0, 1.0e-300, 1.0e20, NAN, INF, -INF]))
+            ->toBe('{0.30000000000000004,3.141592653589793,1.0,-0.0,1.0E-300,1.0E+20,NaN,Infinity,-Infinity}');
+    });
+
     it('serializes a simple array', function () {
         expect(PgArrayParser::serialize(['foo', 'bar', 'baz']))
             ->toBe('{foo,bar,baz}');
