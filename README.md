@@ -2,8 +2,8 @@
 
 <p>
     <a href="https://packagist.org/packages/andreacolzani/laravel-pgarray"><img src="https://img.shields.io/packagist/v/andreacolzani/laravel-pgarray.svg?style=flat-square" alt="Latest Version on Packagist"></a>
-    <a href="https://github.com/andrecolza/laravel-pgarray/actions?query=workflow%3Arun-tests+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andrecolza/laravel-pgarray/run-tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
-    <a href="https://github.com/andrecolza/laravel-pgarray/actions?query=workflow%3APHPStan+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andrecolza/laravel-pgarray/phpstan.yml?branch=main&label=phpstan&style=flat-square" alt="PHPStan"></a>
+    <a href="https://github.com/andreacolzani/laravel-pgarray/actions?query=workflow%3Arun-tests+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andreacolzani/laravel-pgarray/run-tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
+    <a href="https://github.com/andreacolzani/laravel-pgarray/actions?query=workflow%3APHPStan+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andreacolzani/laravel-pgarray/phpstan.yml?branch=main&label=phpstan&style=flat-square" alt="PHPStan"></a>
     <a href="https://packagist.org/packages/andreacolzani/laravel-pgarray"><img src="https://img.shields.io/packagist/dt/andreacolzani/laravel-pgarray.svg?style=flat-square" alt="Total Downloads"></a>
 </p>
 <p>
@@ -338,7 +338,7 @@ Please report security vulnerabilities privately through [GitHub security adviso
 
 ## Credits
 
-- [Andrea Colzani](https://github.com/andrecolza)
+- [Andrea Colzani](https://github.com/andreacolzani)
 - [All Contributors](../../contributors)
 
 ## License
