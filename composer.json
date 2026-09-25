@@ -38,8 +38,7 @@
     },
     "autoload": {
         "psr-4": {
-            "AndreaColzani\\PgArray\\": "src/",
-            "AndreaColzani\\PgArray\\Database\\Factories\\": "database/factories/"
+            "AndreaColzani\\PgArray\\": "src/"
         }
     },
     "autoload-dev": {

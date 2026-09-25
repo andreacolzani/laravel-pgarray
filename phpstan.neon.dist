@@ -6,6 +6,5 @@ parameters:
     paths:
         - src
         - config
-        - database
         - tests/Fixtures
     tmpDir: build/phpstan
