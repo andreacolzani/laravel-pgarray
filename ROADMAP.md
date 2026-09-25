@@ -954,33 +954,43 @@ Introduce/expand tests against real PostgreSQL.
 
 ---
 
-## Milestone 15 — Compatibility matrix
+## Milestone 15 — Compatibility matrix [DONE]
 
 ### PHP
 
-- [ ] PHP 8.3
-- [ ] PHP 8.4
-- [ ] PHP 8.5
+- [x] PHP 8.3
+- [x] PHP 8.4
+- [x] PHP 8.5
 
 ### Laravel
 
-- [ ] Laravel 12
-- [ ] Laravel 13
+- [x] Laravel 12
+- [x] Laravel 13
 
 ### PostgreSQL
 
 Evaluate and test the PostgreSQL versions officially targeted by the package at release time.
 
-Potential matrix:
+Tested matrix:
 
-- [ ] PostgreSQL 15
-- [ ] PostgreSQL 16
-- [ ] PostgreSQL 17
-- [ ] PostgreSQL 18
+- [x] PostgreSQL 15
+- [x] PostgreSQL 16
+- [x] PostgreSQL 17
+- [x] PostgreSQL 18
 
 The final matrix should reflect versions actually supported by the package and its dependencies at release time.
 
-> **Decisions taken so far:**
+Final supported matrix:
+
+| | Versions |
+|---|---|
+| PHP | 8.3, 8.4, 8.5 (8.6 tested as experimental) |
+| Laravel | 12, 13 |
+| PostgreSQL | 15, 16, 17, 18 |
+| PostGIS (optional) | 3.5, 3.6 |
+| pgvector (optional) | any version packaged for the PostgreSQL release |
+
+> **Design decisions:**
 > - The minimum PHP version is 8.3, the oldest version tested in CI (Laravel 12 requires PHP 8.2, the Pest 4 test suite PHP 8.3).
 > - Laravel 11 (end of security support: March 2026) is no longer supported: `illuminate/*` `^12.0||^13.0`, `orchestra/testbench` `^10.0||^11.0`.
 > - PostgreSQL compatibility is guaranteed from PostgreSQL 15 (PostgreSQL 14 reaches end of life in November 2026).
@@ -989,6 +999,7 @@ The final matrix should reflect versions actually supported by the package and i
 >   - `integration` job: PHP 8.3 / 8.4 / 8.5 × Laravel 12 / 13 × `prefer-lowest` / `prefer-stable` on PostgreSQL 18 (PostGIS 3.6, pgvector), plus one combination each on PostgreSQL 15, 16 and 17 (PostGIS 3.5).
 >   - PHP 8.6 (nightly build) runs as an experimental combination in both jobs (`continue-on-error`, `--ignore-platform-req=php+`) until its release. It runs with `display_errors=Off` and `log_errors=Off`: otherwise PHP prints the deprecations raised by third-party code (e.g. `spl_object_hash()` in Laravel 12) as test output, making tests risky (`failOnRisky`). Deprecations are still reported by Pest.
 >   - `fail-fast` stays enabled: the first failure cancels the run.
+> - The integration suite of Milestone 14 was also run locally on PostgreSQL 15, 16, 17 and 18 (`postgis/postgis` images with pgvector) before pushing; the whole matrix then ran in CI.
 
 ---
 
