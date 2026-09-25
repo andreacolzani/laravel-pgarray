@@ -3,6 +3,7 @@
 namespace AndreaColzani\PgArray;
 
 use AndreaColzani\PgArray\Commands\PgArrayCommand;
+use AndreaColzani\PgArray\Database\PgArrayQuery;
 use AndreaColzani\PgArray\Database\PgArraySchema;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
 use Illuminate\Contracts\Container\Container;
@@ -40,5 +41,6 @@ class PgArrayServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         PgArraySchema::register();
+        PgArrayQuery::register();
     }
 }

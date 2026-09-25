@@ -803,7 +803,7 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 13 — Query Builder
+## Milestone 13 — Query Builder [DONE]
 
 Support PostgreSQL array operators:
 
@@ -814,23 +814,56 @@ Support PostgreSQL array operators:
 ||  concatenation
 ```
 
-Do not finalize method names until this milestone begins.
-
 ### Tasks
 
-- [ ] Design public API.
-- [ ] Implement contains.
-- [ ] Implement contained by.
-- [ ] Implement overlap.
-- [ ] Implement concatenation if appropriate.
-- [ ] Support arrays.
-- [ ] Support Collections.
-- [ ] Handle empty values.
-- [ ] Handle strings/numbers/UUIDs.
-- [ ] Handle multidimensional values where applicable.
-- [ ] Test generated SQL.
-- [ ] Test bindings.
-- [ ] Add real PostgreSQL integration tests.
+- [x] Design public API.
+- [x] Implement contains.
+- [x] Implement contained by.
+- [x] Implement overlap.
+- [x] Implement concatenation if appropriate.
+- [x] Support arrays.
+- [x] Support Collections.
+- [x] Handle empty values.
+- [x] Handle strings/numbers/UUIDs.
+- [x] Handle multidimensional values where applicable.
+- [x] Test generated SQL.
+- [x] Test bindings.
+- [x] Add real PostgreSQL integration tests.
+
+Usage:
+
+```php
+use AndreaColzani\PgArray\Enums\PgArrayType;
+
+Post::query()
+    ->wherePgArrayContains('tags', ['php', 'laravel'])          // "tags" @> ?
+    ->wherePgArrayContainedBy('tags', $allowed)                 // "tags" <@ ?
+    ->orWherePgArrayOverlaps('tags', collect(['vue', 'php']))   // or "tags" && ?
+    ->wherePgArrayDoesntContain('tags', 'legacy')               // not ("tags" @> ?)
+    ->wherePgArrayOverlaps('ids', $ids, PgArrayType::BigInt)    // "ids" && ?::bigint[]
+    ->get();
+
+Post::whereKey($id)->pgArrayAppend('tags', ['new']);          // set "tags" = "tags" || '{new}'
+Post::whereKey($id)->pgArrayPrepend('tags', 'first');         // set "tags" = '{first}' || "tags"
+```
+
+> **Design decisions:**
+> - Filters are `Query\Builder` macros registered by `Database\PgArrayQuery::register()` in the service provider, so they also work on Eloquent builders and relations. Each operator has the full Laravel set of variants, named like `whereJsonContains` / `whereJsonDoesntContain`:
+>   - `@>`: `wherePgArrayContains`, `orWherePgArrayContains`, `wherePgArrayDoesntContain`, `orWherePgArrayDoesntContain`
+>   - `<@`: `wherePgArrayContainedBy`, `orWherePgArrayContainedBy`, `wherePgArrayNotContainedBy`, `orWherePgArrayNotContainedBy`
+>   - `&&`: `wherePgArrayOverlaps`, `orWherePgArrayOverlaps`, `wherePgArrayDoesntOverlap`, `orWherePgArrayDoesntOverlap`
+> - Signature: `(string|Expression $column, mixed $values, PgArrayType|PgArrayTypeDefinition|null $type = null)`. They add a `PgArray` where type, compiled by a `wherePgArray` grammar macro. Columns are wrapped by the grammar, so `table.column` and `Expression` columns work. Other drivers throw a `RuntimeException`.
+> - `$values` can be an array, an `Arrayable` (Collection) or a single value, which is wrapped into a one-element array. Elements can be scalars, `null`, nested arrays (multidimensional), `BackedEnum`, and `Stringable` (Ramsey / Symfony UUIDs, Carbon). A `null` value throws an `InvalidArgumentException`. `Support\PgArrayLiteral` turns the value into an array literal (e.g. `{php,laravel}`). `PgArrayDefault` uses it too.
+> - The literal is sent as a single binding. PostgreSQL resolves an untyped parameter to the type of the other operand, so no cast is needed. Passing `$type` adds an explicit cast (`?::bigint[]`), for example with expressions.
+> - Empty values keep PostgreSQL semantics:
+>   - `@> '{}'` is always true.
+>   - `<@ '{}'` matches only empty arrays.
+>   - `&& '{}'` is always false.
+>   - Negated forms (`not (...)`) exclude rows where the column is `NULL`, like `whereJsonDoesntContain`.
+> - Multidimensional values follow PostgreSQL semantics: `@>` / `<@` / `&&` compare the elements regardless of dimensions.
+> - Concatenation is an update, not a filter: `pgArrayAppend()` / `pgArrayPrepend()` `(string $column, mixed $values, $type = null, array $extra = [])`. Like `increment()`, they return the number of affected rows. They are registered on both `Query\Builder` and `Eloquent\Builder`, and the Eloquent version goes through `Eloquent\Builder::update()`, so `updated_at` is touched. Appending to a `NULL` column yields the appended values.
+> - `update()` does not support bindings inside expressions. So `Database\PgArrayConcatenation` inlines the literal, escaped by the connection (`Grammar::escape()`, i.e. PDO quoting). The untyped literal takes the column's array type.
+> - Integration tests (`tests/Integration/PgArrayQueryTest.php`) cover every operator on `text[]`, `integer[]`, `uuid[]` and `integer[][]`, plus empty values, `NULL` columns, special characters, append / prepend and Eloquent timestamps.
 
 ### Checkpoint
 

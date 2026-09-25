@@ -144,4 +144,4 @@ it('keeps non-array defaults unchanged', function (mixed $value): void {
 
 it('rejects unsupported default elements', function (): void {
     pgArrayColumn(PgArrayType::Text)->default([new stdClass]);
-})->throws(InvalidArgumentException::class, 'Unsupported pgArray() default element of type [stdClass].');
+})->throws(InvalidArgumentException::class, 'Unsupported PostgreSQL array element of type [stdClass].');
