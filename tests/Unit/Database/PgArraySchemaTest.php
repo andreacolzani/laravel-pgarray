@@ -54,6 +54,7 @@ it('creates array columns', function (Closure $column, string $sql): void {
     'nullable' => [fn (Blueprint $table) => $table->pgArray('tags', PgArrayType::Text)->nullable(), '"tags" text[] null'],
     'array default' => [fn (Blueprint $table) => $table->pgArray('tags', PgArrayType::Text)->default(['a', "b'c"]), '"tags" text[] not null default \'{a,b\'\'c}\'::text[]'],
     'empty default' => [fn (Blueprint $table) => $table->pgArray('tags', PgArrayType::Text)->default([]), '"tags" text[] not null default \'{}\'::text[]'],
+    'geometry default' => [fn (Blueprint $table) => $table->pgArray('shapes', PgArrayType::Geometry)->default(['POINT(1 2)', 'POINT(3 4)']), '"shapes" geometry[] not null default \'{"POINT(1 2)":"POINT(3 4)"}\'::geometry[]'],
     'literal default' => [fn (Blueprint $table) => $table->pgArray('tags', PgArrayType::Text)->default('{a,b}'), '"tags" text[] not null default \'{a,b}\''],
     'without null elements' => [
         fn (Blueprint $table) => $table->pgArray('tags', PgArrayType::Text)->withoutNullElements()->nullable(),

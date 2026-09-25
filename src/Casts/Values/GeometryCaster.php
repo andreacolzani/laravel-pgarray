@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Contracts\PgArrayDelimited;
 use AndreaColzani\PgArray\Types\Point;
 use Stringable;
 use UnexpectedValueException;
@@ -16,9 +17,16 @@ use UnexpectedValueException;
  *
  * No GIS parsing happens here: use AsPgArray::of(Point::class) to retrieve
  * points as objects, or an external serializer for richer geometries.
+ *
+ * PostGIS separates the elements of geometry[] / geography[] with ':'.
  */
-final class GeometryCaster implements PgArrayValueCaster
+final class GeometryCaster implements PgArrayDelimited, PgArrayValueCaster
 {
+    public static function pgArrayDelimiter(): string
+    {
+        return ':';
+    }
+
     public function get(mixed $value): ?string
     {
         return $value === null ? null : (string) $value;

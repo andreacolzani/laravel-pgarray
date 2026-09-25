@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
+use AndreaColzani\PgArray\Contracts\PgArrayDelimited;
 use AndreaColzani\PgArray\Contracts\PgArrayJsonSerializer;
 use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
+use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
+use AndreaColzani\PgArray\Support\PgArrayParser;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
 use BackedEnum;
 use Illuminate\Container\Container;
@@ -40,6 +43,10 @@ use UnitEnum;
  *
  * Encrypted definitions wrap the resolved caster in EncryptedCaster, so any
  * element type can be encrypted element by element.
+ *
+ * delimiter() resolves the array delimiter the same way: the one declared
+ * (PgArrayDelimited) by the caster, or by the serializer, then the class of
+ * a class-string; ',' otherwise, and always for encrypted elements (text[]).
  */
 final class PgArrayValueCasterResolver
 {
@@ -58,6 +65,45 @@ final class PgArrayValueCasterResolver
             : $caster;
     }
 
+    public static function delimiter(PgArrayElementDefinition $definition, PgArrayValueCaster $caster): string
+    {
+        $type = $definition->type;
+
+        $delimiter = match (true) {
+            $definition->encrypted => null,
+            is_string($type) && class_exists($type) => self::declaredDelimiter(self::serializer($type)) ?? self::declaredDelimiter($type),
+            default => self::declaredDelimiter($caster),
+        };
+
+        if ($delimiter === null) {
+            return PgArrayParser::DEFAULT_DELIMITER;
+        }
+
+        PgArrayParser::ensureDelimiter($delimiter);
+
+        return $delimiter;
+    }
+
+    /**
+     * @param  object|class-string|null  $declarer
+     */
+    private static function declaredDelimiter(object|string|null $declarer): ?string
+    {
+        return $declarer !== null && is_subclass_of($declarer, PgArrayDelimited::class)
+            ? $declarer::pgArrayDelimiter()
+            : null;
+    }
+
+    /**
+     * @param  class-string  $type
+     */
+    private static function serializer(string $type): ?PgArrayValueSerializer
+    {
+        return Container::getInstance()
+            ->make(PgArraySerializerRegistry::class)
+            ->resolve($type);
+    }
+
     /**
      * @throws UnsupportedElementException
      */
@@ -67,9 +113,7 @@ final class PgArrayValueCasterResolver
             throw UnsupportedElementException::unknownClass($type);
         }
 
-        $serializer = Container::getInstance()
-            ->make(PgArraySerializerRegistry::class)
-            ->resolve($type);
+        $serializer = self::serializer($type);
 
         if ($serializer instanceof PgArrayJsonSerializer) {
             return new JsonSerializerCaster($type, $serializer);

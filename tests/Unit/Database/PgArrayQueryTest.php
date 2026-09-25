@@ -133,3 +133,11 @@ it('does not add a where clause for invalid values', function (): void {
         ->and($query->wheres)->toBe([])
         ->and($query->getBindings())->toBe([]);
 });
+
+it('uses the delimiter of the given type', function (): void {
+    $query = pgsqlQuery()->wherePgArrayOverlaps('places', ['POINT(1 2)', 'POINT(3 4)'], PgArrayType::Geography);
+
+    expect($query->getBindings())->toBe(['{"POINT(1 2)":"POINT(3 4)"}'])
+        ->and(pgsqlPretend(fn () => pgsqlQuery()->pgArrayAppend('shapes', ['POINT(1 2)', 'POINT(3 4)'], PgArrayTypeDefinition::geometry('Point')))[0]['query'])
+        ->toBe('update "posts" set "shapes" = "shapes" || \'{"POINT(1 2)":"POINT(3 4)"}\'::geometry(Point)[]');
+});

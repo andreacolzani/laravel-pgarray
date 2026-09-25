@@ -7,20 +7,28 @@ use InvalidArgumentException;
 final class PgArrayParser
 {
     /**
+     * The array delimiter of most PostgreSQL types (pg_type.typdelim). PostGIS
+     * geometry and geography use ':' instead.
+     */
+    public const DEFAULT_DELIMITER = ',';
+
+    /**
      * Parse a PostgreSQL array representation into a PHP array.
      *
      * @return array<int, string|int|bool|null|array<int, mixed>>
      */
-    public static function parse(string $value): array
+    public static function parse(string $value, string $delimiter = self::DEFAULT_DELIMITER): array
     {
         if ($value === '') {
             throw new InvalidArgumentException('The PostgreSQL array cannot be empty.');
         }
 
+        self::ensureDelimiter($delimiter);
+
         $position = 0;
         $length = strlen($value);
 
-        return self::parseArray($value, $position, $length);
+        return self::parseArray($value, $position, $length, $delimiter);
     }
 
     /**
@@ -28,9 +36,24 @@ final class PgArrayParser
      *
      * @param  array<int, string|int|float|bool|null|array<int, mixed>>  $value
      */
-    public static function serialize(array $value): string
+    public static function serialize(array $value, string $delimiter = self::DEFAULT_DELIMITER): string
     {
-        return self::serializeArray($value);
+        self::ensureDelimiter($delimiter);
+
+        return self::serializeArray($value, $delimiter);
+    }
+
+    /**
+     * A delimiter is a single character with no other meaning in the array
+     * syntax, as PostgreSQL requires.
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function ensureDelimiter(string $delimiter): void
+    {
+        if (strlen($delimiter) !== 1 || str_contains("{}\"\\ \t\n\r\v\f", $delimiter)) {
+            throw new InvalidArgumentException("Invalid PostgreSQL array delimiter [{$delimiter}].");
+        }
     }
 
     /**
@@ -40,6 +63,7 @@ final class PgArrayParser
         string $value,
         int &$position,
         int $length,
+        string $delimiter,
     ): array {
         if ($position >= $length || $value[$position] !== '{') {
             throw new InvalidArgumentException(
@@ -59,16 +83,16 @@ final class PgArrayParser
             }
 
             if ($value[$position] === '{') {
-                $result[] = self::parseArray($value, $position, $length);
+                $result[] = self::parseArray($value, $position, $length, $delimiter);
             } else {
-                $result[] = self::parseValue($value, $position, $length);
+                $result[] = self::parseValue($value, $position, $length, $delimiter);
             }
 
             if ($position >= $length) {
                 break;
             }
 
-            if ($value[$position] === ',') {
+            if ($value[$position] === $delimiter) {
                 $position++;
 
                 continue;
@@ -94,6 +118,7 @@ final class PgArrayParser
         string $value,
         int &$position,
         int $length,
+        string $delimiter,
     ): ?string {
         if ($position >= $length) {
             throw new InvalidArgumentException(
@@ -109,7 +134,8 @@ final class PgArrayParser
 
         while (
             $position < $length
-            && ! in_array($value[$position], [',', '}'], true)
+            && $value[$position] !== $delimiter
+            && $value[$position] !== '}'
         ) {
             $position++;
         }
@@ -164,12 +190,12 @@ final class PgArrayParser
     /**
      * @param  array<int, string|int|float|bool|null|array<int, mixed>>  $value
      */
-    private static function serializeArray(array $value): string
+    private static function serializeArray(array $value, string $delimiter): string
     {
         $values = array_map(
-            static function (mixed $item): string {
+            static function (mixed $item) use ($delimiter): string {
                 if (is_array($item)) {
-                    return self::serializeArray($item);
+                    return self::serializeArray($item, $delimiter);
                 }
 
                 if ($item === null) {
@@ -182,12 +208,12 @@ final class PgArrayParser
                     default => (string) $item,
                 };
 
-                return self::serializeValue($item);
+                return self::serializeValue($item, $delimiter);
             },
             $value,
         );
 
-        return '{'.implode(',', $values).'}';
+        return '{'.implode($delimiter, $values).'}';
     }
 
     /**
@@ -203,13 +229,15 @@ final class PgArrayParser
         };
     }
 
-    private static function serializeValue(string $value): string
+    private static function serializeValue(string $value, string $delimiter): string
     {
         if ($value === '') {
             return '""';
         }
 
-        if (preg_match('/[\s,{}"\\\\]/', $value) === 1) {
+        // Elements containing ',' are quoted with any delimiter: it is harmless,
+        // and ',' is part of the syntax of some element types.
+        if (preg_match('/[\s,{}"\\\\'.preg_quote($delimiter, '/').']/', $value) === 1) {
             return '"'.addcslashes($value, '\\"').'"';
         }
 

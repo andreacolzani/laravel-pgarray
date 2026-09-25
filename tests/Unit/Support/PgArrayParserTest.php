@@ -121,3 +121,24 @@ it('round trips parsed values', function (string $postgres, array $expected) {
         ['baz', 'qux'],
     ]],
 ]);
+
+describe('delimiter', function () {
+    it('parses arrays with another delimiter', function () {
+        expect(PgArrayParser::parse('{0101:a,b:NULL:"x:y"}', ':'))
+            ->toBe(['0101', 'a,b', null, 'x:y'])
+            ->and(PgArrayParser::parse('{{a:b}:{c:NULL}}', ':'))
+            ->toBe([['a', 'b'], ['c', null]]);
+    });
+
+    it('serializes arrays with another delimiter', function () {
+        expect(PgArrayParser::serialize(['POINT(1 2)', null, 'a:b', 'x,y'], ':'))
+            ->toBe('{"POINT(1 2)":NULL:"a:b":"x,y"}')
+            ->and(PgArrayParser::serialize([['a', 'b'], ['c', 'd']], ':'))
+            ->toBe('{{a:b}:{c:d}}');
+    });
+
+    it('rejects invalid delimiters', function (string $delimiter) {
+        PgArrayParser::serialize(['a'], $delimiter);
+    })->with(['', '::', '{', '}', '"', '\\', ' ', "\n"])
+        ->throws(InvalidArgumentException::class, 'Invalid PostgreSQL array delimiter');
+});

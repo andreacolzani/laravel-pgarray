@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Types;
 
+use AndreaColzani\PgArray\Contracts\PgArrayDelimited;
 use AndreaColzani\PgArray\Contracts\PgArrayValue;
 use JsonSerializable;
 use UnexpectedValueException;
@@ -24,7 +25,7 @@ use UnexpectedValueException;
  * serializers (PgArrayValueSerializer), while GeometryCaster keeps them as
  * strings.
  */
-final class Point implements JsonSerializable, PgArrayValue
+final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
 {
     private const WKB_POINT = 1;
 
@@ -48,6 +49,14 @@ final class Point implements JsonSerializable, PgArrayValue
         if ($srid < 0) {
             throw new UnexpectedValueException("Invalid SRID [{$srid}].");
         }
+    }
+
+    /**
+     * PostGIS separates the elements of geometry[] / geography[] with ':'.
+     */
+    public static function pgArrayDelimiter(): string
+    {
+        return ':';
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace AndreaColzani\PgArray\Enums;
 
+use AndreaColzani\PgArray\Support\PgArrayParser;
+
 enum PgArrayType: string
 {
     case Char = 'char';
@@ -37,4 +39,16 @@ enum PgArrayType: string
     case Geography = 'geography';
 
     case Vector = 'vector';
+
+    /**
+     * The array delimiter of the type (pg_type.typdelim): ':' for PostGIS
+     * geometry and geography, ',' for every other type.
+     */
+    public function delimiter(): string
+    {
+        return match ($this) {
+            self::Geometry, self::Geography => ':',
+            default => PgArrayParser::DEFAULT_DELIMITER,
+        };
+    }
 }

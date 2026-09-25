@@ -26,7 +26,7 @@ final class PgArrayDefault implements Expression
         private readonly PgArrayColumnDefinition $column,
         array|Arrayable $value,
     ) {
-        $this->literal = PgArrayLiteral::from($value);
+        $this->literal = PgArrayLiteral::from($value, $column->definition()->type->delimiter());
     }
 
     /**

@@ -18,14 +18,15 @@ final class PgArrayLiteral
 {
     /**
      * Arrays and Arrayable values (Collections) are serialized as arrays, any
-     * other value as a one-element array.
+     * other value as a one-element array. The delimiter is the one of the
+     * element type (':' for PostGIS geometry / geography).
      */
-    public static function from(mixed $values): string
+    public static function from(mixed $values, string $delimiter = PgArrayParser::DEFAULT_DELIMITER): string
     {
         /** @var array<int, string|int|float|bool|null|array<int, mixed>> $normalized */
         $normalized = self::normalize($values);
 
-        return PgArrayParser::serialize($normalized);
+        return PgArrayParser::serialize($normalized, $delimiter);
     }
 
     /**

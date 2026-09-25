@@ -25,7 +25,7 @@ final class PgArrayConcatenation implements Expression
         private readonly PgArrayType|PgArrayTypeDefinition|null $type = null,
         private readonly bool $prepend = false,
     ) {
-        $this->literal = PgArrayLiteral::from($values);
+        $this->literal = PgArrayLiteral::from($values, PgArrayQuery::delimiter($type));
     }
 
     public function getValue(Grammar $grammar): string

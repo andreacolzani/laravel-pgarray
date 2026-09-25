@@ -9,11 +9,13 @@ use AndreaColzani\PgArray\Casts\Values\JsonObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\JsonSerializerCaster;
 use AndreaColzani\PgArray\Casts\Values\ObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayElementDefinition;
+use AndreaColzani\PgArray\Casts\Values\PgArrayValueCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
 use AndreaColzani\PgArray\Casts\Values\SerializerCaster;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
 use AndreaColzani\PgArray\Casts\Values\VectorCaster;
+use AndreaColzani\PgArray\Contracts\PgArrayDelimited;
 use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
@@ -23,9 +25,11 @@ use AndreaColzani\PgArray\Tests\Fixtures\CountryCode;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
 use AndreaColzani\PgArray\Tests\Fixtures\Money;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Shape;
 use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Fixtures\Suit;
+use AndreaColzani\PgArray\Types\Point;
 
 it('resolves a built-in cast to the factory caster', function (PgArrayCast $type): void {
     expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($type)))
@@ -178,3 +182,65 @@ it('wraps encrypted class-string types in the encrypted caster', function (strin
 it('rejects unsupported encrypted class-string types', function (): void {
     PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(stdClass::class, encrypted: true));
 })->throws(UnsupportedElementException::class, 'Unsupported element type [stdClass].');
+
+it('resolves the array delimiter', function (PgArrayElementDefinition $definition, string $delimiter): void {
+    $caster = PgArrayValueCasterResolver::resolve($definition);
+
+    expect(PgArrayValueCasterResolver::delimiter($definition, $caster))->toBe($delimiter);
+})->with([
+    'built-in cast' => [new PgArrayElementDefinition(PgArrayCast::Integer), ','],
+    'geometry' => [new PgArrayElementDefinition(PgArrayCast::Geometry), ':'],
+    'geography' => [new PgArrayElementDefinition(PgArrayCast::Geography), ':'],
+    'PgArrayValue' => [new PgArrayElementDefinition(Point::class), ':'],
+    'serializer' => [new PgArrayElementDefinition(Shape::class), ':'],
+    'backed enum' => [new PgArrayElementDefinition(Status::class), ','],
+    'encrypted' => [new PgArrayElementDefinition(Point::class, encrypted: true), ','],
+]);
+
+it('lets a serializer override the delimiter of its class', function (): void {
+    app(PgArraySerializerRegistry::class)->register(Point::class, SemicolonPointSerializer::class);
+
+    $definition = new PgArrayElementDefinition(Point::class);
+
+    expect(PgArrayValueCasterResolver::delimiter($definition, PgArrayValueCasterResolver::resolve($definition)))->toBe(';');
+});
+
+it('rejects invalid declared delimiters', function (): void {
+    $caster = new class implements PgArrayDelimited, PgArrayValueCaster
+    {
+        public static function pgArrayDelimiter(): string
+        {
+            return '{';
+        }
+
+        public function get(mixed $value): mixed
+        {
+            return $value;
+        }
+
+        public function set(mixed $value): mixed
+        {
+            return $value;
+        }
+    };
+
+    PgArrayValueCasterResolver::delimiter(new PgArrayElementDefinition($caster), $caster);
+})->throws(InvalidArgumentException::class, 'Invalid PostgreSQL array delimiter [{].');
+
+final class SemicolonPointSerializer implements PgArrayDelimited, PgArrayValueSerializer
+{
+    public static function pgArrayDelimiter(): string
+    {
+        return ';';
+    }
+
+    public function serialize(object $value): string
+    {
+        return (string) json_encode($value);
+    }
+
+    public function deserialize(mixed $value, string $class): object
+    {
+        return new Point(0, 0);
+    }
+}

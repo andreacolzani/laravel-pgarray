@@ -809,10 +809,10 @@ it('passes geometry elements through', function (): void {
     $model->shapes = ['POLYGON((0 0,1 0,1 1,0 0))', null, new Point(45.5, 9.25)];
 
     expect($model->getAttributes()['shapes'])
-        ->toBe('{"POLYGON((0 0,1 0,1 1,0 0))",NULL,"SRID=4326;POINT(9.25 45.5)"}');
+        ->toBe('{"POLYGON((0 0,1 0,1 1,0 0))":NULL:"SRID=4326;POINT(9.25 45.5)"}');
 
     $model->setRawAttributes([
-        'shapes' => '{0101000020E6100000000000000000F03F0000000000000040,NULL}',
+        'shapes' => '{0101000020E6100000000000000000F03F0000000000000040:NULL}',
     ]);
 
     expect($model->shapes)
@@ -837,14 +837,14 @@ it('stores points as EWKT', function (): void {
     $model->locations = [new Point(45.4642, 9.19), null, 'POINT(12.4964 41.9028)'];
 
     expect($model->getAttributes()['locations'])
-        ->toBe('{"SRID=4326;POINT(9.19 45.4642)",NULL,"POINT(12.4964 41.9028)"}');
+        ->toBe('{"SRID=4326;POINT(9.19 45.4642)":NULL:"POINT(12.4964 41.9028)"}');
 });
 
 it('retrieves points from EWKB', function (): void {
     $model = new TestModel;
 
     $model->setRawAttributes([
-        'locations' => '{0101000020E6100000000000000000F03F0000000000000040,NULL}',
+        'locations' => '{0101000020E6100000000000000000F03F0000000000000040:NULL}',
     ]);
 
     expect($model->locations)

@@ -40,3 +40,7 @@ it('rejects null values', function (): void {
 it('rejects unsupported elements', function (): void {
     PgArrayLiteral::from([new stdClass]);
 })->throws(InvalidArgumentException::class, 'Unsupported PostgreSQL array element of type [stdClass].');
+
+it('builds literals with the delimiter of the element type', function (): void {
+    expect(PgArrayLiteral::from(['POINT(1 2)', 'POINT(3 4)'], ':'))->toBe('{"POINT(1 2)":"POINT(3 4)"}');
+});

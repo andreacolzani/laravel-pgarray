@@ -6,6 +6,7 @@ namespace AndreaColzani\PgArray\Database;
 
 use AndreaColzani\PgArray\Enums\PgArrayType;
 use AndreaColzani\PgArray\Support\PgArrayLiteral;
+use AndreaColzani\PgArray\Support\PgArrayParser;
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -105,7 +106,7 @@ final class PgArrayQuery
             /** @var Builder $this */
             PgArrayQuery::grammar($this, $method);
 
-            $literal = PgArrayLiteral::from($values);
+            $literal = PgArrayLiteral::from($values, PgArrayQuery::delimiter($type));
 
             $this->wheres[] = [
                 'type' => PgArrayQuery::WHERE_TYPE,
@@ -148,6 +149,21 @@ final class PgArrayQuery
         }
 
         return $grammar;
+    }
+
+    /**
+     * @internal
+     *
+     * Without a type the default ',' delimiter is used: geometry / geography
+     * values need their type to be passed.
+     */
+    public static function delimiter(PgArrayType|PgArrayTypeDefinition|null $type): string
+    {
+        return match (true) {
+            $type === null => PgArrayParser::DEFAULT_DELIMITER,
+            $type instanceof PgArrayType => $type->delimiter(),
+            default => $type->type->delimiter(),
+        };
     }
 
     /**

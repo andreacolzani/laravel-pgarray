@@ -19,14 +19,17 @@ final class PgArray implements CastsAttributes
 {
     private readonly PgArrayValueCaster $caster;
 
+    private readonly string $delimiter;
+
     public function __construct(
         PgArrayCast|PgArrayValueCaster|string $type,
         private readonly PgArrayContainer $container,
         bool $encrypted = false,
     ) {
-        $this->caster = PgArrayValueCasterResolver::resolve(
-            new PgArrayElementDefinition($type, $encrypted),
-        );
+        $definition = new PgArrayElementDefinition($type, $encrypted);
+
+        $this->caster = PgArrayValueCasterResolver::resolve($definition);
+        $this->delimiter = PgArrayValueCasterResolver::delimiter($definition, $this->caster);
     }
 
     public function get(
@@ -41,7 +44,7 @@ final class PgArray implements CastsAttributes
 
         return $this->toContainer(
             $this->castFromDatabase(
-                PgArrayParser::parse($value),
+                PgArrayParser::parse($value, $this->delimiter),
             ),
         );
     }
@@ -62,6 +65,7 @@ final class PgArray implements CastsAttributes
 
         return PgArrayParser::serialize(
             $this->castToDatabase($values),
+            $this->delimiter,
         );
     }
 
