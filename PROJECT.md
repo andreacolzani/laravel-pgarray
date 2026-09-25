@@ -90,10 +90,11 @@ Il package utilizza attualmente:
     "require": {
         "php": "^8.3",
         "illuminate/contracts": "^12.0||^13.0",
+        "illuminate/database": "^12.0||^13.0",
         "illuminate/support": "^12.0||^13.0",
         "ramsey/uuid": "^4.7",
         "spatie/laravel-package-tools": "^1.16",
-        "symfony/uid": "^7.0"
+        "symfony/uid": "^7.2||^8.0"
     }
 }
 ```
