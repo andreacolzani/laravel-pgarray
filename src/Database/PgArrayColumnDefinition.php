@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Database;
 
 use AndreaColzani\PgArray\Enums\PgArrayType;
+use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Schema\ColumnDefinition;
 use InvalidArgumentException;
@@ -51,6 +52,12 @@ final class PgArrayColumnDefinition extends ColumnDefinition
     public function forbidsNullElements(): bool
     {
         return $this->attributes['pgArrayWithoutNullElements'] === true;
+    }
+
+    public function usingExpression(): string|Expression|null
+    {
+        /** @var string|Expression|null */
+        return $this->attributes['pgArrayUsing'] ?? null;
     }
 
     /**
@@ -175,6 +182,20 @@ final class PgArrayColumnDefinition extends ColumnDefinition
         $this->attributes['default'] = is_array($value) || $value instanceof Arrayable
             ? new PgArrayDefault($this, $value)
             : $value;
+
+        return $this;
+    }
+
+    /**
+     * Casting expression applied when changing the column type
+     * (ALTER COLUMN ... TYPE ... USING ...).
+     *
+     * Laravel only compiles using() since 13.23: the package compiles it
+     * itself, so it works on every supported Laravel version.
+     */
+    public function using(string|Expression $expression): self
+    {
+        $this->attributes['pgArrayUsing'] = $expression;
 
         return $this;
     }

@@ -60,16 +60,41 @@ final class PgArraySchema
 
         $sql = $column->toArraySql();
 
+        if ($column->get('change')) {
+            if ($column->forbidsNullElements()) {
+                throw new RuntimeException(
+                    'withoutNullElements() cannot be used when changing a column: add the CHECK constraint separately.',
+                );
+            }
+
+            return $sql.self::compileUsing($grammar, $column);
+        }
+
         if (! $column->forbidsNullElements()) {
             return $sql;
         }
 
-        if ($column->get('change')) {
+        return $sql.' check (array_position('.$grammar->wrap($column).', NULL) is null)';
+    }
+
+    /**
+     * The USING clause is appended to the type: Laravel compiles the altered
+     * type with getType(), and adds the COLLATE clause after it.
+     */
+    private static function compileUsing(Grammar $grammar, PgArrayColumnDefinition $column): string
+    {
+        $expression = $column->usingExpression();
+
+        if ($expression === null) {
+            return '';
+        }
+
+        if ($column->get('collation') !== null) {
             throw new RuntimeException(
-                'withoutNullElements() cannot be used when changing a column: add the CHECK constraint separately.',
+                'using() cannot be combined with collation() when changing a pgArray() column: change the collation separately.',
             );
         }
 
-        return $sql.' check (array_position('.$grammar->wrap($column).', NULL) is null)';
+        return ' using '.$grammar->getValue($expression);
     }
 }

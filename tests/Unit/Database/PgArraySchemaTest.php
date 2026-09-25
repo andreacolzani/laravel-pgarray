@@ -105,12 +105,35 @@ it('changes array columns with a casting expression and a default', function ():
         $table->pgArray('numbers', PgArrayType::Integer)->using('numbers::integer[]')->default([1])->change();
     }));
 
-    expect($queries[0])->toStartWith(
+    expect($queries[0])->toBe(
         'alter table "posts" alter column "numbers" type integer[] using numbers::integer[], '
         .'alter column "numbers" set not null, '
-        .'alter column "numbers" set default \'{1}\'::integer[]',
+        .'alter column "numbers" set default \'{1}\'::integer[], '
+        .'alter column "numbers" drop identity if exists',
     );
 });
+
+it('changes array columns with a casting expression object', function (): void {
+    $queries = pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
+        $table->pgArray('numbers', PgArrayType::BigInt)->using(DB::raw('"numbers"::bigint[]'))->nullable()->change();
+    }));
+
+    expect($queries[0])->toStartWith('alter table "posts" alter column "numbers" type bigint[] using "numbers"::bigint[], ');
+});
+
+it('ignores the casting expression when not changing a column', function (): void {
+    $queries = pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
+        $table->pgArray('numbers', PgArrayType::Integer)->using('numbers::integer[]')->nullable();
+    }));
+
+    expect($queries)->toBe(['alter table "posts" add column "numbers" integer[] null']);
+});
+
+it('does not change a column with both a casting expression and a collation', function (): void {
+    pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
+        $table->pgArray('tags', PgArrayType::Text)->using('tags::text[]')->collation('C')->change();
+    }));
+})->throws(RuntimeException::class, 'using() cannot be combined with collation()');
 
 it('does not change a column forbidding null elements', function (): void {
     pgsqlSchemaSql(fn ($schema) => $schema->table('posts', function (Blueprint $table): void {
