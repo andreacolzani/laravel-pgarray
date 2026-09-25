@@ -930,6 +930,9 @@ Introduce/expand tests against real PostgreSQL.
 - [ ] Overlap
 - [ ] Concatenation
 
+> **Fixes found by the integration suite:**
+> - **Date-times keep their offset (differs from Laravel).** `DateTimeCaster` / `ImmutableDateTimeCaster` write `Y-m-d H:i:s.uP` (e.g. `2026-08-20 14:30:00.000000+02:00`), while Laravel's `datetime` cast writes `Y-m-d H:i:s` without an offset. Without the offset, PostgreSQL reads a `timestamptz` value in the **session** time zone: with an application in UTC and a server in Europe/Berlin, `14:30 UTC` was stored as `14:30+02` and read back as `12:30 UTC`, and any Carbon instance not in the session time zone was shifted. With the offset, `timestamptz[]` stores the exact instant whatever the session time zone; `timestamp[]` (without time zone) ignores the offset, so it keeps the wall-clock time as before. Values read with an offset (`timestamptz`) are converted to the default PHP time zone (`date_default_timezone_get()`, i.e. `app.timezone`), like Laravel's dates. Query builder operators format `DateTimeInterface` elements the same way. To be documented in the README (Milestone 17).
+
 ---
 
 ## Milestone 15 — Compatibility matrix
@@ -1026,6 +1029,8 @@ Suggested structure:
 ## Custom value objects
 
 ## JSON / JSONB
+
+## Dates and time zones
 
 ## Encrypted arrays
 

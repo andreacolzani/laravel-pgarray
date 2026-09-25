@@ -5,6 +5,7 @@ declare(strict_types=1);
 use AndreaColzani\PgArray\Support\PgArrayLiteral;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Uid\Uuid as SymfonyUuid;
@@ -27,6 +28,7 @@ it('builds PostgreSQL array literals', function (mixed $values, string $literal)
     'ramsey uuid' => [[Uuid::fromString('0b8e4f3a-5d3c-4d7e-9f1a-2b3c4d5e6f70')], '{0b8e4f3a-5d3c-4d7e-9f1a-2b3c4d5e6f70}'],
     'symfony uuid' => [[SymfonyUuid::fromString('0b8e4f3a-5d3c-4d7e-9f1a-2b3c4d5e6f70')], '{0b8e4f3a-5d3c-4d7e-9f1a-2b3c4d5e6f70}'],
     'special characters' => [['a,b', 'say "hi"', 'back\\slash', "it's", '{x}', ''], '{"a,b","say \\"hi\\"","back\\\\slash",it\'s,"{x}",""}'],
+    'dates' => [[CarbonImmutable::parse('2026-08-20 14:30:00.5', 'Europe/Rome'), new DateTime('2026-08-20 14:30:00+05:00')], '{"2026-08-20 14:30:00.500000+02:00","2026-08-20 14:30:00.000000+05:00"}'],
     'scalar' => ['php', '{php}'],
     'scalar enum' => [Status::Inactive, '{inactive}'],
 ]);

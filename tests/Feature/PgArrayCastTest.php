@@ -145,11 +145,11 @@ it('serializes temporal concrete castables when setting attributes', function ()
     expect($model->getAttributes()['date_array'])
         ->toBe('{2026-08-20}')
         ->and($model->getAttributes()['datetime_array'])
-        ->toBe('{"2026-08-20 14:30:00.123456"}')
+        ->toBe('{"2026-08-20 14:30:00.123456+00:00"}')
         ->and($model->getAttributes()['immutable_date_array'])
         ->toBe('{2026-08-20}')
         ->and($model->getAttributes()['immutable_datetime_array'])
-        ->toBe('{"2026-08-20 14:30:00.123456"}');
+        ->toBe('{"2026-08-20 14:30:00.123456+00:00"}');
 });
 
 it('supports a temporal concrete collection castable', function (): void {

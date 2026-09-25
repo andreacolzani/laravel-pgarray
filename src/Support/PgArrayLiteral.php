@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AndreaColzani\PgArray\Support;
 
 use BackedEnum;
+use DateTimeInterface;
 use Illuminate\Contracts\Support\Arrayable;
 use InvalidArgumentException;
 use Stringable;
@@ -47,6 +48,8 @@ final class PgArrayLiteral
         return array_map(static fn (mixed $element): mixed => match (true) {
             is_array($element), $element instanceof Arrayable => self::normalize($element),
             $element instanceof BackedEnum => $element->value,
+            // With the offset, like DateTimeCaster, so timestamptz compares the right instant.
+            $element instanceof DateTimeInterface => $element->format('Y-m-d H:i:s.uP'),
             $element instanceof Stringable, is_float($element) => (string) $element,
             $element === null, is_string($element), is_int($element), is_bool($element) => $element,
             default => throw new InvalidArgumentException(sprintf(
