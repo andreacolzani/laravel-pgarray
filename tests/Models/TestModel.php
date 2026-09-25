@@ -21,8 +21,11 @@ use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Contact;
+use AndreaColzani\PgArray\Tests\Fixtures\CountryCode;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
+use AndreaColzani\PgArray\Tests\Fixtures\Money;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use Illuminate\Database\Eloquent\Model;
 
@@ -74,6 +77,13 @@ final class TestModel extends Model
                 PgArrayContainer::Collection,
             ),
             'contacts' => AsPgArray::of(Contact::class),
+            'prices' => AsPgArray::of(Money::class),
+            'price_collection' => AsPgArray::of(
+                Money::class,
+                PgArrayContainer::Collection,
+            ),
+            'skus' => AsPgArray::of(Sku::class),
+            'country_codes' => AsPgArray::of(CountryCode::class),
         ];
     }
 }

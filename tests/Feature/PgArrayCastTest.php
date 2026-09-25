@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Contact;
+use AndreaColzani\PgArray\Tests\Fixtures\CountryCode;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
+use AndreaColzani\PgArray\Tests\Fixtures\Money;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Models\TestModel;
 use Carbon\Carbon;
@@ -396,4 +399,76 @@ it('supports a PgArrayJsonValue collection', function (): void {
 
     expect($model->getAttributes()['address_collection'])
         ->toBe('{"{\"street\":\"Via Po 2\",\"city\":\"Roma\"}"}');
+});
+
+it('supports configured serializer element types when retrieving attributes', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'prices' => '{"{\"amount\": 1250, \"currency\": \"EUR\"}",NULL}',
+    ]);
+
+    expect($model->prices)
+        ->toEqual([new Money(1250, 'EUR'), null]);
+});
+
+it('serializes configured serializer element types when setting attributes', function (): void {
+    $model = new TestModel;
+
+    $model->prices = [
+        new Money(1250, 'EUR'),
+        '{"currency": "USD", "amount": 99}',
+    ];
+
+    expect($model->getAttributes()['prices'])
+        ->toBe('{"{\"amount\":1250,\"currency\":\"EUR\"}","{\"amount\":99,\"currency\":\"USD\"}"}');
+});
+
+it('round-trips multidimensional serializer element types through an eloquent model', function (): void {
+    $prices = [
+        [new Money(1250, 'EUR'), new Money(99, 'USD')],
+        [new Money(0, 'GBP'), null],
+    ];
+
+    $model = new TestModel;
+    $model->prices = $prices;
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->prices)->toEqual($prices);
+});
+
+it('supports a serializer element type collection', function (): void {
+    $model = new TestModel;
+
+    $model->setRawAttributes([
+        'price_collection' => '{"{\"amount\":1250,\"currency\":\"EUR\"}"}',
+    ]);
+
+    expect($model->price_collection)
+        ->toBeInstanceOf(Collection::class)
+        ->toEqual(collect([new Money(1250, 'EUR')]));
+
+    $model->price_collection = collect([new Money(99, 'USD')]);
+
+    expect($model->getAttributes()['price_collection'])
+        ->toBe('{"{\"amount\":99,\"currency\":\"USD\"}"}');
+});
+
+it('shares a declared serializer between element types', function (): void {
+    $model = new TestModel;
+
+    $model->skus = [new Sku('AB-1'), 'cd-2'];
+    $model->country_codes = [[new CountryCode('IT'), 'fr'], ['de', null]];
+
+    expect($model->getAttributes()['skus'])->toBe('{AB-1,CD-2}')
+        ->and($model->getAttributes()['country_codes'])->toBe('{{IT,FR},{DE,NULL}}');
+
+    $restored = (new TestModel)->setRawAttributes($model->getAttributes());
+
+    expect($restored->skus)->toEqual([new Sku('AB-1'), new Sku('CD-2')])
+        ->and($restored->country_codes)->toEqual([
+            [new CountryCode('IT'), new CountryCode('FR')],
+            [new CountryCode('DE'), null],
+        ]);
 });

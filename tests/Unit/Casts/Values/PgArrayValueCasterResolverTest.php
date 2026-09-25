@@ -5,16 +5,23 @@ declare(strict_types=1);
 use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
 use AndreaColzani\PgArray\Casts\Values\JsonObjectCaster;
+use AndreaColzani\PgArray\Casts\Values\JsonSerializerCaster;
 use AndreaColzani\PgArray\Casts\Values\ObjectCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayElementDefinition;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterFactory;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
+use AndreaColzani\PgArray\Casts\Values\SerializerCaster;
 use AndreaColzani\PgArray\Casts\Values\UnsupportedElementException;
+use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
+use AndreaColzani\PgArray\Support\PgArraySerializerRegistry;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Color;
+use AndreaColzani\PgArray\Tests\Fixtures\CountryCode;
 use AndreaColzani\PgArray\Tests\Fixtures\Email;
+use AndreaColzani\PgArray\Tests\Fixtures\Money;
 use AndreaColzani\PgArray\Tests\Fixtures\Priority;
+use AndreaColzani\PgArray\Tests\Fixtures\Sku;
 use AndreaColzani\PgArray\Tests\Fixtures\Status;
 use AndreaColzani\PgArray\Tests\Fixtures\Suit;
 
@@ -72,3 +79,65 @@ it('rejects an unsupported class string', function (): void {
 it('rejects unsupported element types with an invalid argument exception', function (): void {
     PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(stdClass::class));
 })->throws(InvalidArgumentException::class);
+
+it('explains how to support an unsupported class string', function (): void {
+    PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(stdClass::class));
+})->throws(
+    UnsupportedElementException::class,
+    'Implement PgArrayValue, or map a PgArrayValueSerializer to it',
+);
+
+it('resolves a configured JSON serializer to the JSON serializer caster', function (): void {
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(Money::class)))
+        ->toBeInstanceOf(JsonSerializerCaster::class);
+});
+
+it('resolves declared scalar serializers to the serializer caster', function (string $class): void {
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($class)))
+        ->toBeInstanceOf(SerializerCaster::class);
+})->with([Sku::class, CountryCode::class]);
+
+it('prefers a registered serializer over the PgArrayValue contract and backed enum support', function (string $class): void {
+    app(PgArraySerializerRegistry::class)->register($class, new class implements PgArrayValueSerializer
+    {
+        public function serialize(object $value): mixed
+        {
+            return 'serialized';
+        }
+
+        public function deserialize(mixed $value, string $class): object
+        {
+            return new stdClass;
+        }
+    });
+
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition($class)))
+        ->toBeInstanceOf(SerializerCaster::class);
+})->with([Email::class, Address::class, Color::class, Status::class]);
+
+it('resolves a registered serializer for a class without other support', function (): void {
+    app(PgArraySerializerRegistry::class)->register(stdClass::class, new class implements PgArrayValueSerializer
+    {
+        public function serialize(object $value): mixed
+        {
+            return 'serialized';
+        }
+
+        public function deserialize(mixed $value, string $class): object
+        {
+            return new stdClass;
+        }
+    });
+
+    expect(PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(stdClass::class)))
+        ->toBeInstanceOf(SerializerCaster::class);
+});
+
+it('rejects an invalid configured serializer', function (): void {
+    app(PgArraySerializerRegistry::class)->register(Money::class, stdClass::class);
+
+    PgArrayValueCasterResolver::resolve(new PgArrayElementDefinition(Money::class));
+})->throws(
+    UnsupportedElementException::class,
+    'Invalid serializer [stdClass] for element type ['.Money::class.'].',
+);

@@ -3,6 +3,8 @@
 namespace AndreaColzani\PgArray\Tests;
 
 use AndreaColzani\PgArray\PgArrayServiceProvider;
+use AndreaColzani\PgArray\Tests\Fixtures\Money;
+use AndreaColzani\PgArray\Tests\Fixtures\MoneySerializer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -27,6 +29,10 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+
+        config()->set('pgarray.serializers', [
+            Money::class => MoneySerializer::class,
+        ]);
 
         /*
          foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/../database/migrations') as $migration) {

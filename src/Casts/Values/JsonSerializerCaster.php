@@ -4,39 +4,36 @@ declare(strict_types=1);
 
 namespace AndreaColzani\PgArray\Casts\Values;
 
-use AndreaColzani\PgArray\Contracts\PgArrayJsonValue;
+use AndreaColzani\PgArray\Contracts\PgArrayJsonSerializer;
 use JsonException;
 use UnexpectedValueException;
 
 /**
- * Casts json[] / jsonb[] elements to and from a PgArrayJsonValue implementation.
+ * Casts json[] / jsonb[] elements to and from a class through an external
+ * PgArrayJsonSerializer.
  *
- *   DB  → json_decode (objects as associative arrays) → fromPgArrayValue()
- *   PHP → toPgArrayValue() → json_encode
+ *   DB  → json_decode (objects as associative arrays) → deserialize()
+ *   PHP → serialize() → json_encode
  *
  * SQL NULL elements, JSON null elements and null logical values are all
  * treated as null. On set(), raw JSON strings are normalized through
- * fromPgArrayValue() first, so the class can validate them. Objects of any
+ * deserialize() first, so the serializer can validate them. Objects of any
  * other class are rejected.
  */
-final class JsonObjectCaster implements PgArrayValueCaster
+final class JsonSerializerCaster implements PgArrayValueCaster
 {
-    public const ENCODE_FLAGS = JSON_THROW_ON_ERROR
-        | JSON_UNESCAPED_SLASHES
-        | JSON_UNESCAPED_UNICODE
-        | JSON_PRESERVE_ZERO_FRACTION;
-
     /**
-     * @param  class-string<PgArrayJsonValue>  $class
+     * @param  class-string  $class
      */
     public function __construct(
         private readonly string $class,
+        private readonly PgArrayJsonSerializer $serializer,
     ) {}
 
     /**
      * @throws JsonException
      */
-    public function get(mixed $value): ?PgArrayJsonValue
+    public function get(mixed $value): ?object
     {
         if ($value === null) {
             return null;
@@ -68,17 +65,19 @@ final class JsonObjectCaster implements PgArrayValueCaster
             ? $value
             : $this->fromJson($value);
 
-        $logical = $object?->toPgArrayValue();
+        $logical = $object === null
+            ? null
+            : $this->serializer->serialize($object);
 
         return $logical === null
             ? null
-            : json_encode($logical, self::ENCODE_FLAGS);
+            : json_encode($logical, JsonObjectCaster::ENCODE_FLAGS);
     }
 
     /**
      * @throws JsonException
      */
-    private function fromJson(mixed $value): ?PgArrayJsonValue
+    private function fromJson(mixed $value): ?object
     {
         if (! is_string($value)) {
             throw new UnexpectedValueException(sprintf(
@@ -90,8 +89,21 @@ final class JsonObjectCaster implements PgArrayValueCaster
 
         $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
 
-        return $decoded === null
-            ? null
-            : $this->class::fromPgArrayValue($decoded);
+        if ($decoded === null) {
+            return null;
+        }
+
+        $object = $this->serializer->deserialize($decoded, $this->class);
+
+        if (! $object instanceof $this->class) {
+            throw new UnexpectedValueException(sprintf(
+                '[%s]::deserialize() must return an instance of [%s], [%s] given.',
+                $this->serializer::class,
+                $this->class,
+                get_debug_type($object),
+            ));
+        }
+
+        return $object;
     }
 }

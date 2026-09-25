@@ -1,0 +1,97 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AndreaColzani\PgArray\Casts\Values;
+
+use AndreaColzani\PgArray\Contracts\PgArrayJsonSerializer;
+use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
+use UnexpectedValueException;
+
+/**
+ * Casts array elements to and from a class through an external serializer.
+ *
+ *   DB  → deserialize()
+ *   PHP → serialize() (scalar logical value)
+ *
+ * Structured logical values require PgArrayJsonSerializer (see
+ * JsonSerializerCaster).
+ *
+ * On set(), raw values that are not yet instances of the class are normalized
+ * through deserialize() first, so the serializer can validate them. Objects of
+ * any other class are rejected.
+ */
+final class SerializerCaster implements PgArrayValueCaster
+{
+    /**
+     * @param  class-string  $class
+     */
+    public function __construct(
+        private readonly string $class,
+        private readonly PgArrayValueSerializer $serializer,
+    ) {}
+
+    public function get(mixed $value): ?object
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return $value instanceof $this->class
+            ? $value
+            : $this->deserialize($value);
+    }
+
+    public function set(mixed $value): string|int|float|bool|null
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_object($value) && ! $value instanceof $this->class) {
+            throw new UnexpectedValueException(sprintf(
+                'Unable to cast [%s] to [%s].',
+                get_debug_type($value),
+                $this->class,
+            ));
+        }
+
+        $object = $value instanceof $this->class
+            ? $value
+            : $this->deserialize($value);
+
+        return $this->toLogicalValue($object);
+    }
+
+    private function deserialize(mixed $value): object
+    {
+        $object = $this->serializer->deserialize($value, $this->class);
+
+        if (! $object instanceof $this->class) {
+            throw new UnexpectedValueException(sprintf(
+                '[%s]::deserialize() must return an instance of [%s], [%s] given.',
+                $this->serializer::class,
+                $this->class,
+                get_debug_type($object),
+            ));
+        }
+
+        return $object;
+    }
+
+    private function toLogicalValue(object $object): string|int|float|bool|null
+    {
+        $value = $this->serializer->serialize($object);
+
+        if ($value === null || is_scalar($value)) {
+            return $value;
+        }
+
+        throw new UnexpectedValueException(sprintf(
+            '[%s]::serialize() must return a scalar value or null, [%s] given. Implement [%s] to store structured values as JSON.',
+            $this->serializer::class,
+            get_debug_type($value),
+            PgArrayJsonSerializer::class,
+        ));
+    }
+}

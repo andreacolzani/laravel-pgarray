@@ -396,35 +396,68 @@ Run the standard suite and commit.
 
 ---
 
-## Milestone 7 — External serializers
+## Milestone 7 — External serializers [DONE]
 
 Add optional support for classes that cannot be modified, require complex serialization, or share serialization rules.
 
-Potential contract:
+Contract:
 
 ```php
 interface PgArrayValueSerializer
 {
-    public function serialize(mixed $value): mixed;
+    public function serialize(object $value): mixed;
 
-    public function deserialize(mixed $value): mixed;
+    /** @param class-string $class */
+    public function deserialize(mixed $value, string $class): object;
 }
 ```
 
-The exact naming and API should be finalized when implementing this milestone.
-
 ### Tasks
 
-- [ ] Define serializer contract.
-- [ ] Decide configuration/registry mechanism.
-- [ ] Support class → serializer mapping.
-- [ ] Support serializers shared by multiple classes.
-- [ ] Integrate external serializers into the resolver.
-- [ ] Define precedence relative to `PgArrayValue`.
-- [ ] Test unmodifiable classes.
-- [ ] Test shared serializers.
-- [ ] Test missing serializer errors.
-- [ ] Test Collection and multidimensional arrays.
+- [x] Define serializer contract (`Contracts\PgArrayValueSerializer`, JSON marker `Contracts\PgArrayJsonSerializer`).
+- [x] Decide configuration/registry mechanism (`pgarray.serializers` config + `Support\PgArraySerializerRegistry`, `#[PgArraySerializer]` attribute, `Contracts\PgArraySerializable`).
+- [x] Support class → serializer mapping.
+- [x] Support serializers shared by multiple classes.
+- [x] Integrate external serializers into the resolver (`SerializerCaster`, `JsonSerializerCaster`).
+- [x] Define precedence relative to `PgArrayValue`.
+- [x] Test unmodifiable classes.
+- [x] Test shared serializers.
+- [x] Test missing serializer errors.
+- [x] Test Collection and multidimensional arrays.
+
+Usage:
+
+```php
+// config/pgarray.php — classes that cannot be modified
+serializers => [
+    Money::class => MoneySerializer::class,
+],
+
+// documented default for your own classes
+#[PgArraySerializer(SkuSerializer::class)]
+final class Sku { /* ... */ }
+
+// alternative through a method
+final class CountryCode implements PgArraySerializable
+{
+    public static function pgArraySerializer(): string
+    {
+        return StringValueSerializer::class;
+    }
+}
+
+prices => AsPgArray::of(Money::class), // cast definition is unchanged
+```
+
+> **Design decisions:**
+> - Serializers are mapped to element classes in three ways, in order of precedence: the `pgarray.serializers` configuration (loaded into the `PgArraySerializerRegistry` singleton, which also exposes `register()` for service providers), the `#[PgArraySerializer]` attribute (documented default for classes you own) and the `PgArraySerializable` contract (method-based alternative). The attribute wins over the method when a class uses both. The element class does not need to implement any other contract.
+> - Lookup is by exact class name: the attribute and the contract are not inherited by subclasses, and the configuration does not match parent classes or interfaces.
+> - A serializer takes precedence over `PgArrayJsonValue` / `PgArrayValue` and `BackedEnum` support: explicit configuration wins over class-level defaults, so existing value objects and third-party enums can be overridden without modifying them.
+> - The storage format is declared by the serializer, consistently with Milestone 6: `PgArrayValueSerializer` returns scalar logical values or `null` (`SerializerCaster`), the `PgArrayJsonSerializer` marker stores logical values as JSON in `json[]` / `jsonb[]` (`JsonSerializerCaster`, same encoding flags and `null` semantics as `JsonObjectCaster`).
+> - `deserialize()` receives the target class, so one serializer can be shared by multiple classes; it must return an instance of that class, otherwise an `UnexpectedValueException` is thrown. It is never called with `null`.
+> - `set()` normalizes raw values through `deserialize()` → `serialize()` and rejects objects of other classes, as `ObjectCaster` / `JsonObjectCaster` do.
+> - Serializer classes are instantiated through the container (dependency injection) once per registry and shared by every class they are mapped to; instances can also be registered directly.
+> - A mapped class that does not implement `PgArrayValueSerializer` fails with `UnsupportedElementException::invalidSerializer()`; classes with no support at all fail with `UnsupportedElementException::unsupportedClass()`, whose message now points to the available options.
 
 ### Checkpoint
 

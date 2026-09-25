@@ -43,6 +43,7 @@ Alla fine dell'ultima fase di sviluppo:
 - `PgArrayValueCasterResolver` + `PgArrayElementDefinition` + `UnsupportedElementException` (Milestone 3)
 - `Contracts\PgArrayValue` + `ObjectCaster`: value object custom con valore logico scalare (Milestone 5)
 - `Contracts\PgArrayJsonValue` + `JsonObjectCaster` + trait `Concerns\InteractsWithPgArrayJson`: value object custom serializzati come elementi JSON in colonne `json[]` / `jsonb[]` (Milestone 6)
+- `Contracts\PgArrayValueSerializer` + `Contracts\PgArrayJsonSerializer` + `SerializerCaster` / `JsonSerializerCaster`: serializer esterni mappati tramite config `pgarray.serializers` (`Support\PgArraySerializerRegistry`), attribute `#[PgArraySerializer]` o `Contracts\PgArraySerializable`; precedenza su `PgArrayValue` e `BackedEnum` (Milestone 7)
 - `EnumCaster`: supporto automatico ai `BackedEnum` (string/int) via `AsPgArray::of(Status::class)`; pure enum rifiutati con `UnsupportedElementException::pureEnum()` (Milestone 4)
 - castable specifici implementati per: Boolean, Integer, String, Decimal, Float, Double, Real, Stringable, Date, DateTime, ImmutableDate, ImmutableDateTime, Uri, Ulid, Uuid
 - container `array` e `Collection` supportati

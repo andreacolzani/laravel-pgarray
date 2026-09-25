@@ -29,7 +29,14 @@ final class UnsupportedElementException extends InvalidArgumentException
     public static function unsupportedClass(string $type): self
     {
         return new self(
-            "Unsupported element type [{$type}].",
+            "Unsupported element type [{$type}]. Implement PgArrayValue, or map a PgArrayValueSerializer to it through the pgarray.serializers configuration, the #[PgArraySerializer] attribute or PgArraySerializable.",
+        );
+    }
+
+    public static function invalidSerializer(string $type, string $serializer): self
+    {
+        return new self(
+            "Invalid serializer [{$serializer}] for element type [{$type}]. Serializers must implement PgArrayValueSerializer.",
         );
     }
 }
