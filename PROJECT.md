@@ -6,8 +6,8 @@
 **Namespace:** `AndreaColzani\PgArray`  
 **GitHub:** `andreacolzani/laravel-pgarray`  
 **License:** MIT  
-**PHP:** `^8.1`  
-**Laravel:** `^11.0 || ^12.0 || ^13.0`
+**PHP:** `^8.3`  
+**Laravel:** `^12.0 || ^13.0`
 
 ### Obiettivo
 
@@ -88,9 +88,9 @@ Il package utilizza attualmente:
 ```json
 {
     "require": {
-        "php": "^8.1",
-        "illuminate/contracts": "^11.0||^12.0||^13.0",
-        "illuminate/support": "^11.0||^12.0||^13.0",
+        "php": "^8.3",
+        "illuminate/contracts": "^12.0||^13.0",
+        "illuminate/support": "^12.0||^13.0",
         "ramsey/uuid": "^4.7",
         "spatie/laravel-package-tools": "^1.16",
         "symfony/uid": "^7.0"

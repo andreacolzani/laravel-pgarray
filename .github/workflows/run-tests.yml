@@ -36,8 +36,23 @@ jobs:
             testbench: 11.*
           - laravel: 12.*
             testbench: 10.*
+          # Upcoming PHP release (nightly build): allowed to fail.
+          - os: ubuntu-latest
+            php: 8.6
+            laravel: 13.*
+            testbench: 11.*
+            stability: prefer-stable
+            experimental: true
+          - os: ubuntu-latest
+            php: 8.6
+            laravel: 12.*
+            testbench: 10.*
+            stability: prefer-stable
+            experimental: true
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}${{ matrix.experimental && ' (experimental)' || '' }}
+
+    continue-on-error: ${{ matrix.experimental == true }}
 
     steps:
       - name: Checkout code
@@ -58,13 +73,14 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+          composer update --${{ matrix.stability }} --prefer-dist --no-interaction ${{ matrix.experimental && '--ignore-platform-req=php+' || '' }}
 
       - name: List Installed Dependencies
         run: composer show -D
 
+      # The PostgreSQL tests run in the integration job.
       - name: Execute tests
-        run: vendor/bin/pest --ci
+        run: vendor/bin/pest --ci --exclude-group=pgsql
 
   integration:
     runs-on: ubuntu-latest
@@ -72,19 +88,51 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.5, 8.3]
+        php: [8.5, 8.4, 8.3]
         laravel: [13.*, 12.*]
+        stability: [prefer-lowest, prefer-stable]
+        postgres: [18]
+        postgis: ['3.6']
         include:
           - laravel: 13.*
             testbench: 11.*
           - laravel: 12.*
             testbench: 10.*
+          # Older supported PostgreSQL versions (compatibility is guaranteed from PostgreSQL 15).
+          - php: 8.3
+            laravel: 12.*
+            testbench: 10.*
+            stability: prefer-lowest
+            postgres: 15
+            postgis: '3.5'
+          - php: 8.4
+            laravel: 13.*
+            testbench: 11.*
+            stability: prefer-stable
+            postgres: 16
+            postgis: '3.5'
+          - php: 8.5
+            laravel: 13.*
+            testbench: 11.*
+            stability: prefer-stable
+            postgres: 17
+            postgis: '3.5'
+          # Upcoming PHP release (nightly build): allowed to fail.
+          - php: 8.6
+            laravel: 13.*
+            testbench: 11.*
+            stability: prefer-stable
+            postgres: 18
+            postgis: '3.6'
+            experimental: true
 
-    name: PostgreSQL - P${{ matrix.php }} - L${{ matrix.laravel }}
+    name: PostgreSQL ${{ matrix.postgres }} - P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }}${{ matrix.experimental && ' (experimental)' || '' }}
+
+    continue-on-error: ${{ matrix.experimental == true }}
 
     services:
       postgres:
-        image: postgis/postgis:17-3.5
+        image: postgis/postgis:${{ matrix.postgres }}-${{ matrix.postgis }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -112,7 +160,7 @@ jobs:
 
       - name: Install pgvector
         run: |
-          docker exec ${{ job.services.postgres.id }} bash -c "apt-get update && apt-get install -y --no-install-recommends postgresql-17-pgvector"
+          docker exec ${{ job.services.postgres.id }} bash -c "apt-get update && apt-get install -y --no-install-recommends postgresql-${{ matrix.postgres }}-pgvector"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -129,7 +177,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --prefer-stable --prefer-dist --no-interaction
+          composer update --${{ matrix.stability }} --prefer-dist --no-interaction ${{ matrix.experimental && '--ignore-platform-req=php+' || '' }}
 
       - name: Execute PostgreSQL tests
         run: vendor/bin/pest --ci --group=pgsql

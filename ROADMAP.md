@@ -795,7 +795,7 @@ Schema::table('posts', function (Blueprint $table) {
 > - Alterations use Laravel's `change()`: as for every column, the full definition must be restated. Casts PostgreSQL cannot apply implicitly need `->using(...)` (string or `Expression`); no `USING` clause is generated automatically. Laravel only compiles its native `using()` modifier since 13.23, so `PgArrayColumnDefinition` overrides it and `PgArraySchema` appends the clause to the altered type itself: it works on every supported Laravel version, and is ignored when the column is not being changed. Since Laravel adds the `COLLATE` clause after the type, combining `using()` with `collation()` in a `change()` throws a `RuntimeException` (change the collation separately).
 > - Dropping uses the native `dropColumn()`: no dedicated helper.
 > - PostgreSQL does not store the declared number of dimensions: `integer[][]` is introspected as `integer[]`.
-> - Integration tests (`tests/Integration`, group `pgsql`) use the `PGARRAY_DB_*` connection and are skipped when PostgreSQL (or an extension) is not available, unless `PGARRAY_REQUIRE_DB=true`. The `integration` job of `run-tests.yml` runs them on `postgis/postgis:17-3.5` with pgvector installed and `PGARRAY_REQUIRE_DB=true`, so CI never skips them.
+> - Integration tests (`tests/Integration`, group `pgsql`) use the `PGARRAY_DB_*` connection and are skipped when PostgreSQL (or an extension) is not available, unless `PGARRAY_REQUIRE_DB=true`. The `integration` job of `run-tests.yml` runs them on PostgreSQL 15 to 18 (`postgis/postgis` images, see Milestone 15) with pgvector installed and `PGARRAY_REQUIRE_DB=true`, so CI never skips them.
 
 ### Checkpoint
 
@@ -936,14 +936,12 @@ Introduce/expand tests against real PostgreSQL.
 
 ### PHP
 
-- [ ] PHP 8.1
-- [ ] PHP 8.2
 - [ ] PHP 8.3
 - [ ] PHP 8.4
+- [ ] PHP 8.5
 
 ### Laravel
 
-- [ ] Laravel 11
 - [ ] Laravel 12
 - [ ] Laravel 13
 
@@ -959,6 +957,16 @@ Potential matrix:
 - [ ] PostgreSQL 18
 
 The final matrix should reflect versions actually supported by the package and its dependencies at release time.
+
+> **Decisions taken so far:**
+> - The minimum PHP version is 8.3, the oldest version tested in CI (Laravel 12 requires PHP 8.2, the Pest 4 test suite PHP 8.3).
+> - Laravel 11 (end of security support: March 2026) is no longer supported: `illuminate/*` `^12.0||^13.0`, `orchestra/testbench` `^10.0||^11.0`.
+> - PostgreSQL compatibility is guaranteed from PostgreSQL 15 (PostgreSQL 14 reaches end of life in November 2026).
+> - `run-tests.yml` CI matrix:
+>   - `test` job: Ubuntu and Windows × PHP 8.3 / 8.4 / 8.5 × Laravel 12 / 13 × `prefer-lowest` / `prefer-stable`, excluding the `pgsql` group.
+>   - `integration` job: PHP 8.3 / 8.4 / 8.5 × Laravel 12 / 13 × `prefer-lowest` / `prefer-stable` on PostgreSQL 18 (PostGIS 3.6, pgvector), plus one combination each on PostgreSQL 15, 16 and 17 (PostGIS 3.5).
+>   - PHP 8.6 (nightly build) runs as an experimental combination in both jobs (`continue-on-error`, `--ignore-platform-req=php+`) until its release.
+>   - `fail-fast` stays enabled: the first failure cancels the run.
 
 ---
 
