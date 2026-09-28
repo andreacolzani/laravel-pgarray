@@ -31,7 +31,7 @@ Make sure your PHP, Laravel and PostgreSQL versions are [supported](#compatibili
 Optionally, you can publish the configuration file. You only need it to map [external serializers](#classes-you-cannot-modify):
 
 ```bash
-php artisan vendor:publish --tag="laravel-pgarray-config"
+php artisan vendor:publish --tag="pgarray-config"
 ```
 
 ## Quick start
