@@ -1,6 +1,7 @@
 <?php
 
-// config for AndreaColzani/PgArray
+declare(strict_types=1);
+
 return [
 
     /*
