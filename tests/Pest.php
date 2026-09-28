@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use AndreaColzani\PgArray\Tests\TestCase;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;

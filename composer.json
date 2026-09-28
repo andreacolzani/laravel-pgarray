@@ -51,8 +51,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "AndreaColzani\\PgArray\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/"
+            "AndreaColzani\\PgArray\\Tests\\": "tests/"
         }
     },
     "scripts": {

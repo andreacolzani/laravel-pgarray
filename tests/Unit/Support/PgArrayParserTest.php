@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use AndreaColzani\PgArray\Exceptions\InvalidDefinitionException;
 use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Support\PgArrayParser;

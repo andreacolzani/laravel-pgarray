@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AndreaColzani\PgArray\Tests;
 
 use AndreaColzani\PgArray\PgArrayServiceProvider;
