@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-pgarray` will be documented in this file.
 
+## 1.0.1 - 2026-09-28
+
+### Fixed
+
+- Documented config publish tag: the config file is published with `php artisan vendor:publish --tag="pgarray-config"` (the `laravel-pgarray-config` tag in the 1.0.0 README and Boost skill found nothing).
+
 ## 1.0.0 - 2026-09-28
 
 First stable release: complete, idiomatic support for PostgreSQL arrays in Laravel.
