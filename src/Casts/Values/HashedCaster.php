@@ -10,18 +10,8 @@ use SensitiveParameter;
 use Stringable;
 
 /**
- * Hashes individual array elements.
- *
- *   DB  → hash string (unchanged)
- *   PHP → Hash::make() (hashes are kept as they are)
- *
- * Hashing is one-way: retrieved elements are always hash strings, so values
- * are verified through PgArrayHash::check() / PgArrayHash::find().
- *
- * Mirrors Laravel's hashed cast element by element: values that are already
- * hashed are stored unchanged, so hashes read from the database can be
- * assigned again without being hashed twice; they must match the configured
- * hashing algorithm. NULL elements are not hashed.
+ * Mirrors Laravel's hashed cast element by element: existing hashes are
+ * stored unchanged, so hashes read from the database can be assigned again.
  *
  * @internal
  */

@@ -10,25 +10,12 @@ use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Encrypts and decrypts individual array elements around another caster.
+ * Encrypts each element around another caster, keeping the array structure
+ * and NULL elements visible (unlike Laravel's encrypted:array cast).
  *
- *   DB  → decrypt → element caster get()
- *   PHP → element caster set() → encrypt
- *
- * Each element is encrypted separately, so the PostgreSQL array keeps its
- * structure (dimensions, length and NULL elements) and only element values
- * are hidden. This differs from Laravel's encrypted:array cast, which
- * encrypts the whole array as a single JSON payload.
- *
- * The element caster's logical value is encrypted in its PostgreSQL text
- * representation (booleans as t / f, like PgArrayParser::serialize()), so it
- * can be parsed again by the same caster after decryption. Ciphertexts are
- * strings, so encrypted arrays require a text[] (or varchar[]) column.
- *
- * Encryption uses the encrypter configured for Eloquent models
- * (Model::encryptUsing()), falling back to the application encrypter, so
- * custom encrypters and previous keys work as with Laravel's encrypted casts.
- * NULL elements are not encrypted.
+ * The logical value is encrypted in its PostgreSQL text form, so the same
+ * caster can parse it after decryption. Model::currentEncrypter() supports
+ * Model::encryptUsing() and previous keys.
  *
  * @internal
  */

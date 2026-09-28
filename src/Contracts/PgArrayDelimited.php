@@ -11,12 +11,10 @@ namespace AndreaColzani\PgArray\Contracts;
  * geography use ':' ({0101…:0101…}): PostgreSQL rejects a comma-separated
  * literal with more than one element, and returns elements separated by ':'.
  *
- * It can be implemented by value casters (PgArrayValueCaster), PgArrayValue
- * classes and external serializers (PgArrayValueSerializer). A serializer's
- * delimiter takes precedence over the one of the class it serializes.
- * Encrypted elements are stored in text[] columns, so they always use ','.
- *
- *   GeometryCaster, Point → ':'
+ * It can be implemented by PgArrayValue classes and external serializers
+ * (PgArrayValueSerializer): a serializer's delimiter takes precedence over the
+ * one of the class it serializes. Encrypted elements are stored in text[]
+ * columns, so they always use ','.
  */
 interface PgArrayDelimited
 {

@@ -8,13 +8,8 @@ use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Stringable;
 
 /**
- * Casts bytea array elements to and from raw binary strings.
- *
- *   DB  → hex format (\x0a0b…) or legacy escape format → binary string
- *   PHP → binary string → hex format (\x0a0b…)
- *
- * Assigned strings are always treated as raw binary data, never as values
- * already encoded in the PostgreSQL bytea format.
+ * Assigned strings are always raw binary data, written in hex format (\x0a0b…).
+ * Reads both the hex and the legacy escape format.
  *
  * @internal
  */

@@ -15,9 +15,6 @@ use Illuminate\Contracts\Database\Eloquent\Castable;
  */
 abstract class PgArrayCastable implements Castable
 {
-    /**
-     * Retrieve the array as a Collection instead of a PHP array.
-     */
     public static function collect(): string
     {
         return static::class.':'.PgArrayContainer::Collection->value;

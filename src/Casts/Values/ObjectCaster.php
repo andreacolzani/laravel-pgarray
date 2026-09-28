@@ -9,16 +9,9 @@ use AndreaColzani\PgArray\Contracts\PgArrayValue;
 use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 
 /**
- * Casts array elements to and from a PgArrayValue implementation.
- *
- *   DB  → fromPgArrayValue()
- *   PHP → toPgArrayValue() (scalar logical value)
- *
- * Structured logical values require PgArrayJsonValue (see JsonObjectCaster).
- *
- * On set(), raw values that are not yet instances of the class are normalized
- * through fromPgArrayValue() first, so the class can validate them. Objects of
- * any other class are rejected.
+ * Elements of a PgArrayValue class, stored as scalar logical values. Raw
+ * values are normalized through fromPgArrayValue() on set(), so the class can
+ * validate them.
  *
  * @internal
  */

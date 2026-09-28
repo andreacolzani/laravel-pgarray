@@ -11,10 +11,6 @@ use Illuminate\Contracts\Container\Container;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-/**
- * Registers the serializer registry, the pgArray() migration helper and the
- * query builder macros.
- */
 final class PgArrayServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void

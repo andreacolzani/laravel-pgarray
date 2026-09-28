@@ -8,13 +8,8 @@ use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Stringable;
 
 /**
- * Casts inet array elements (IPv4 / IPv6 host address with optional prefix).
- *
- *   DB  → string
- *   PHP → validated and normalized string
- *
- * Normalization matches the PostgreSQL output: IPv6 addresses are written in
- * compressed lowercase form and full-length prefixes (/32, /128) are omitted.
+ * Validates assigned addresses and normalizes them like PostgreSQL output:
+ * compressed lowercase IPv6, no full-length prefixes (/32, /128).
  *
  * @internal
  */

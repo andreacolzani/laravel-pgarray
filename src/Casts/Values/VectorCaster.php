@@ -10,16 +10,7 @@ use AndreaColzani\PgArray\Types\Vector;
 use Stringable;
 
 /**
- * Casts pgvector array elements (vector[] columns) to and from Vector.
- *
- *   DB  → [1,2,3] → Vector
- *   PHP → Vector or [1,2,3] string → [1,2,3]
- *
- * Plain list<float> elements cannot be assigned: PHP arrays are nested
- * dimensions of the PostgreSQL array, so vectors must be Vector instances.
- *
- * When dimensions are configured, every element must have exactly that many
- * dimensions, both when setting and when retrieving.
+ * pgvector elements. Configured dimensions are validated on get() and set().
  *
  * @internal
  */

@@ -9,17 +9,8 @@ use AndreaColzani\PgArray\Contracts\PgArrayValueSerializer;
 use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 
 /**
- * Casts array elements to and from a class through an external serializer.
- *
- *   DB  → deserialize()
- *   PHP → serialize() (scalar logical value)
- *
- * Structured logical values require PgArrayJsonSerializer (see
- * JsonSerializerCaster).
- *
- * On set(), raw values that are not yet instances of the class are normalized
- * through deserialize() first, so the serializer can validate them. Objects of
- * any other class are rejected.
+ * Elements handled by an external PgArrayValueSerializer, with the same rules
+ * as ObjectCaster.
  *
  * @internal
  */

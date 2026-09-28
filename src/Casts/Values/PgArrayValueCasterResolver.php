@@ -18,36 +18,13 @@ use Illuminate\Container\Container;
 use UnitEnum;
 
 /**
- * Resolution layer between PgArray and individual value casters.
+ * Resolves the caster of an element definition. Class-strings are resolved in
+ * order of precedence: external serializer, PgArrayJsonValue, PgArrayValue,
+ * BackedEnum. Encrypted definitions wrap the caster in EncryptedCaster.
  *
- *   Resolver
- *    ├── PgArrayValueCaster → used as is (casters configured by castables)
- *    ├── PgArrayCast  →  PgArrayValueCasterFactory
- *    └── class-string →  JsonSerializerCaster / SerializerCaster (external serializer)
- *                        / JsonObjectCaster (PgArrayJsonValue) / ObjectCaster (PgArrayValue)
- *                        / EnumCaster (BackedEnum)
- *
- * Built-in PgArrayCast values are delegated to PgArrayValueCasterFactory,
- * keeping that factory focused on built-in casters. Class-strings are
- * resolved in order of precedence:
- *
- *   1. an external serializer found by PgArraySerializerRegistry (configured
- *      or declared on the class): PgArrayJsonSerializer implementations
- *      resolve to JsonSerializerCaster, the others to SerializerCaster
- *   2. PgArrayJsonValue implementations resolve to JsonObjectCaster, other
- *      PgArrayValue implementations to ObjectCaster
- *   3. BackedEnum class-strings resolve to EnumCaster; pure (UnitEnum) enums
- *      have no storable representation and are rejected explicitly
- *
- * Explicit configuration wins over class-level defaults, so serializers can
- * override PgArrayValue implementations and backed enums without modifying them.
- *
- * Encrypted definitions wrap the resolved caster in EncryptedCaster, so any
- * element type can be encrypted element by element.
- *
- * delimiter() resolves the array delimiter the same way: the one declared
- * (PgArrayDelimited) by the caster, or by the serializer, then the class of
- * a class-string; ',' otherwise, and always for encrypted elements (text[]).
+ * The delimiter is the one declared (PgArrayDelimited) by the caster, or by
+ * the serializer then the class of a class-string; encrypted elements live in
+ * text[] columns and always use ','.
  *
  * @internal
  */

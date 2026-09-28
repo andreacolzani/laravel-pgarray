@@ -176,7 +176,8 @@ Update together: the enum case, the value caster, `PgArrayValueCasterFactory`, t
 - Enum cases in PascalCase (`PgArrayCast::DateTime`, not `DATE_TIME`).
 - Use enums, union types, readonly properties, return types and PHPStan-friendly PHPDoc (`value-of<>`, `class-string`, array shapes).
 - No premature abstraction: no unnecessary factories, no base classes that only save a few lines, no generic APIs without a real use case.
-- Match the style of the surrounding code: short class docblocks that show usage, comments that explain why.
+- Match the style of the surrounding code.
+- Keep comments and docblocks to the strict minimum. Write one only when it adds what the code cannot say: why a choice was made, a non-obvious constraint (PostgreSQL / Laravel behaviour, precision, security) or a short usage example on public API. Never restate the method name, the signature or another docblock, never describe internal classes or the call flow in public docblocks, and do not copy Laravel's generic docblocks. PHPStan types (`@param`, `@return`, `@var`, `@throws`) and `@internal` are always allowed. Remove comments made obsolete by a change in the same change.
 
 ## Testing
 
