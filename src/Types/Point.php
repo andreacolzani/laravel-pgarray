@@ -20,10 +20,8 @@ use JsonSerializable;
  * Assigned strings may also be WKT or EWKT points. Points without an SRID
  * (WKT, or EWKB without the SRID flag) get SRID 0, as in PostGIS.
  *
- * This is intentionally the only spatial object of the package: richer
- * geometries (or objects of GIS libraries) can be mapped through external
- * serializers (PgArrayValueSerializer), while GeometryCaster keeps them as
- * strings.
+ * Richer geometries can be mapped through external serializers, or kept as
+ * strings with AsGeometryArray / AsGeographyArray.
  */
 final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
 {

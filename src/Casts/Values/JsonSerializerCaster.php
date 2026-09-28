@@ -9,16 +9,8 @@ use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use JsonException;
 
 /**
- * Casts json[] / jsonb[] elements to and from a class through an external
- * PgArrayJsonSerializer.
- *
- *   DB  → json_decode (objects as associative arrays) → deserialize()
- *   PHP → serialize() → json_encode
- *
- * SQL NULL elements, JSON null elements and null logical values are all
- * treated as null. On set(), raw JSON strings are normalized through
- * deserialize() first, so the serializer can validate them. Objects of any
- * other class are rejected.
+ * json[] / jsonb[] elements handled by a PgArrayJsonSerializer, with the same
+ * rules as JsonObjectCaster.
  *
  * @internal
  */

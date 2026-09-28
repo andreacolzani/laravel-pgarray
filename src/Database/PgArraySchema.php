@@ -13,11 +13,6 @@ use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Fluent;
 
 /**
- * Registers the pgArray() migration helper:
- *
- *   $table->pgArray('tags', PgArrayType::Text);
- *   $table->pgArray('codes', PgArrayType::Varchar)->length(50)->nullable();
- *
  * @internal
  */
 final class PgArraySchema

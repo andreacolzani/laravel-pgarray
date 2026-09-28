@@ -26,17 +26,13 @@ final class AsPgArray implements Castable
     private const ENCRYPTED = 'encrypted';
 
     /**
-     * Get the caster class to use when casting from / to this cast target.
-     *
      * @param  array{0?: value-of<PgArrayCast>|class-string, 1?: value-of<PgArrayContainer>, 2?: 'encrypted'}  $arguments
      */
     public static function castUsing(array $arguments): PgArray
     {
-        $container = PgArrayContainer::fromCastArgument($arguments[1] ?? null);
-
         return new PgArray(
             type: self::resolveType($arguments[0] ?? PgArrayCast::String->value),
-            container: $container,
+            container: PgArrayContainer::fromCastArgument($arguments[1] ?? null),
             encrypted: self::resolveEncrypted($arguments[2] ?? null),
         );
     }
@@ -54,7 +50,7 @@ final class AsPgArray implements Castable
     }
 
     /**
-     * Encrypt each element individually (see EncryptedCaster).
+     * Encrypt each element individually: the column must be text[].
      *
      * @param  PgArrayCast|class-string  $type
      *

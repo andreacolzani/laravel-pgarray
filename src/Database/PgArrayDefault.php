@@ -31,14 +31,6 @@ final class PgArrayDefault implements Expression
         $this->literal = PgArrayLiteral::from($value, $column->definition()->type->delimiter());
     }
 
-    /**
-     * The PostgreSQL array literal, e.g. {a,b}.
-     */
-    public function literal(): string
-    {
-        return $this->literal;
-    }
-
     public function getValue(Grammar $grammar): string
     {
         return "'".str_replace("'", "''", $this->literal)."'::".$this->column->toArraySql();

@@ -8,14 +8,8 @@ use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Stringable;
 
 /**
- * Casts macaddr array elements (6-byte MAC addresses).
- *
- *   DB  → string
- *   PHP → validated string normalized to 08:00:2b:01:02:03
- *
- * Accepts the input formats supported by PostgreSQL:
- * 08:00:2b:01:02:03, 08-00-2b-01-02-03, 08002b:010203, 08002b-010203,
- * 0800.2b01.0203, 0800-2b01-0203 and 08002b010203 (case-insensitive).
+ * Accepts the macaddr input formats of PostgreSQL and normalizes them to its
+ * output format (08:00:2b:01:02:03).
  *
  * @internal
  */

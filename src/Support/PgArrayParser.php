@@ -18,10 +18,7 @@ use AndreaColzani\PgArray\Exceptions\InvalidValueException;
  */
 final class PgArrayParser
 {
-    /**
-     * The array delimiter of most PostgreSQL types (pg_type.typdelim). PostGIS
-     * geometry and geography use ':' instead.
-     */
+    /** pg_type.typdelim of every type except PostGIS geometry / geography (':'). */
     public const DEFAULT_DELIMITER = ',';
 
     /**
@@ -48,8 +45,6 @@ final class PgArrayParser
     }
 
     /**
-     * Serialize a PHP array into a PostgreSQL array representation.
-     *
      * @param  array<int, string|int|float|bool|null|array<int, mixed>>  $value
      */
     public static function serialize(array $value, string $delimiter = self::DEFAULT_DELIMITER): string

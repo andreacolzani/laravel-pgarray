@@ -7,13 +7,8 @@ namespace AndreaColzani\PgArray\Casts\Values;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 
 /**
- * Internal value object representing the element definition of a PostgreSQL array.
- *
- * This object encapsulates whether the element type is a built-in PgArrayCast
- * enum, a user-provided class string or an already configured caster (e.g. a
- * VectorCaster with dimensions), and whether each element is encrypted.
- * It is used by PgArrayValueCasterResolver to route resolution to the
- * appropriate caster.
+ * The element type of a cast: a built-in PgArrayCast, a class-string or an
+ * already configured caster (e.g. a VectorCaster with dimensions).
  *
  * @internal
  */

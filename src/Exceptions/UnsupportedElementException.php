@@ -7,8 +7,8 @@ namespace AndreaColzani\PgArray\Exceptions;
 use InvalidArgumentException;
 
 /**
- * Thrown when the PgArrayValueCasterResolver cannot resolve an element type
- * to a supported PgArrayValueCaster.
+ * Thrown when an element type is not supported: an unknown class, a pure enum,
+ * a class without contract or serializer, or an invalid serializer.
  */
 final class UnsupportedElementException extends InvalidArgumentException implements PgArrayException
 {

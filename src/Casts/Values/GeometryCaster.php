@@ -10,15 +10,8 @@ use AndreaColzani\PgArray\Types\Point;
 use Stringable;
 
 /**
- * Passthrough caster for PostGIS geometry[] / geography[] elements.
- *
- *   DB  → string, as returned by PostgreSQL (hex EWKB)
- *   PHP → WKT / EWKT / hex EWKB string (unchanged) or Point (EWKT)
- *
- * No GIS parsing happens here: use AsPgArray::of(Point::class) to retrieve
- * points as objects, or an external serializer for richer geometries.
- *
- * PostGIS separates the elements of geometry[] / geography[] with ':'.
+ * Passthrough for PostGIS geometry[] / geography[] elements: reads hex EWKB,
+ * writes WKT / EWKT / hex EWKB strings unchanged (or a Point as EWKT).
  *
  * @internal
  */

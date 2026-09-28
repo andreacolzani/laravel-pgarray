@@ -16,8 +16,6 @@ use SensitiveParameter;
 final class PgArrayHash
 {
     /**
-     * Determine whether the value matches any of the hashes.
-     *
      * @param  iterable<array-key, mixed>|null  $hashes
      */
     public static function check(#[SensitiveParameter] string $value, ?iterable $hashes): bool
@@ -26,9 +24,7 @@ final class PgArrayHash
     }
 
     /**
-     * Get the key of the first hash matching the value, or null.
-     *
-     * Useful to remove a consumed value, such as a used recovery code.
+     * The key of the first matching hash, e.g. to remove a used recovery code.
      *
      * @param  iterable<array-key, mixed>|null  $hashes
      */

@@ -9,10 +9,9 @@ use AndreaColzani\PgArray\Attributes\PgArraySerializer;
 /**
  * External serializer for PostgreSQL array elements.
  *
- * Serializers handle classes that cannot be modified, that need complex
- * serialization, or that share serialization rules: a single serializer may
- * be registered for multiple classes, and deserialize() receives the target
- * class for this reason.
+ * For classes that cannot be modified or share serialization rules: one
+ * serializer can be mapped to several classes, so deserialize() receives the
+ * target class.
  *
  *   PHP → serialize()        → logical value → PostgreSQL element
  *   DB  → PostgreSQL element → deserialize() → PHP object
@@ -27,10 +26,7 @@ use AndreaColzani\PgArray\Attributes\PgArraySerializer;
  * yet an instance of the class. It must return an instance of $class and is
  * never called with null.
  *
- * Serializers are mapped to element classes, in order of precedence, through
- * the pgarray.serializers configuration (or PgArraySerializerRegistry), the
- * #[PgArraySerializer] attribute or the PgArraySerializable contract. A
- * serializer takes precedence over PgArrayValue and BackedEnum support.
+ * A serializer takes precedence over PgArrayValue and BackedEnum support.
  *
  * @see PgArraySerializer
  * @see PgArraySerializable

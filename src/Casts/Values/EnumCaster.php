@@ -9,13 +9,8 @@ use BackedEnum;
 use ReflectionEnum;
 
 /**
- * Casts array elements to and from a BackedEnum.
- *
- *   DB  → BackedEnum case (via tryFrom on the backing value)
- *   PHP → backing value (int|string)
- *
- * Both enum instances and raw backing values are accepted on set(); any value
- * that does not match a case fails explicitly instead of being stored as is.
+ * Accepts cases and backing values; values that match no case fail instead of
+ * being stored as they are.
  *
  * @internal
  */
