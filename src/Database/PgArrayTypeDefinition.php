@@ -137,8 +137,8 @@ final class PgArrayTypeDefinition implements Stringable
     public function toSql(): string
     {
         return $this->parameters === []
-            ? $this->type->value
-            : $this->type->value.'('.implode(',', $this->parameters).')';
+            ? $this->type->sql()
+            : $this->type->sql().'('.implode(',', $this->parameters).')';
     }
 
     /**

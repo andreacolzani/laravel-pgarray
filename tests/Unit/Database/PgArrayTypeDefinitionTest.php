@@ -11,7 +11,15 @@ it('renders types without parameters', function (PgArrayType $type): void {
     expect($definition->toSql())->toBe($type->value)
         ->and($definition->toArraySql())->toBe($type->value.'[]')
         ->and($definition->parameters)->toBe([]);
-})->with(PgArrayType::cases());
+})->with(array_values(array_filter(PgArrayType::cases(), fn (PgArrayType $type): bool => $type !== PgArrayType::Ulid)));
+
+it('renders ULIDs as char(26)', function (): void {
+    expect(PgArrayTypeDefinition::of(PgArrayType::Ulid)->toArraySql())->toBe('char(26)[]');
+});
+
+it('rejects parameters for ULIDs', function (): void {
+    new PgArrayTypeDefinition(PgArrayType::Ulid, [30]);
+})->throws(InvalidArgumentException::class, 'Invalid [ulid] type definition: does not accept parameters.');
 
 it('renders parameterized types', function (PgArrayTypeDefinition $definition, string $sql): void {
     expect($definition->toSql())->toBe($sql)

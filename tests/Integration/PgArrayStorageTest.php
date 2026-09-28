@@ -12,6 +12,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\Ulid;
 
 beforeEach(function (): void {
     pgsql();
@@ -142,6 +143,20 @@ describe('types', function (): void {
         expect(pgsqlRaw($model, 'uuids'))->toBe('{0b8e4f3a-5d3c-4d7e-9f1a-2b3c4d5e6f70,5c1d7b4e-0f7a-4c2b-8e3d-9a8b7c6d5e4f}')
             ->and($uuids[0])->toBeInstanceOf(UuidInterface::class)
             ->and(array_map(strval(...), $uuids))->toBe(['0b8e4f3a-5d3c-4d7e-9f1a-2b3c4d5e6f70', '5c1d7b4e-0f7a-4c2b-8e3d-9a8b7c6d5e4f']);
+    });
+
+    it('round trips ulids', function (): void {
+        $model = PgsqlModel::query()->create(['ulids' => [
+            new Ulid('01H455P6D1K3YFZJ9A8E0S7N5X'),
+            '01h455p6d1k3yfzj9a8e0s7n5y',
+        ]]);
+
+        /** @var list<Ulid> $ulids */
+        $ulids = $model->fresh()?->ulids;
+
+        expect(pgsqlRaw($model, 'ulids'))->toBe('{01H455P6D1K3YFZJ9A8E0S7N5X,01H455P6D1K3YFZJ9A8E0S7N5Y}')
+            ->and($ulids[0])->toBeInstanceOf(Ulid::class)
+            ->and(array_map(strval(...), $ulids))->toBe(['01H455P6D1K3YFZJ9A8E0S7N5X', '01H455P6D1K3YFZJ9A8E0S7N5Y']);
     });
 
     it('round trips dates', function (): void {

@@ -72,6 +72,7 @@ Post::whereKey($post->id)->pgArrayAppend('tags', 'featured');
 | `Inet`, `MacAddr` | `inet`, `macaddr` | |
 | `Json`, `Jsonb` | `json`, `jsonb` | |
 | `Vector` | `vector` | needs the pgvector extension; `size($dimensions)` |
+| `Ulid` | `char(26)` | not a PostgreSQL type: ULIDs are stored as `char(26)`, like Laravel's `ulid()` columns; no modifiers |
 | `Geometry`, `Geography` | `geometry`, `geography` | needs PostGIS; `subtype()`, `srid()` |
 
 ### Examples
@@ -93,6 +94,7 @@ return new class extends Migration
             $table->pgArray('tags', PgArrayType::Text);                            // text[] not null
             $table->pgArray('related_ids', PgArrayType::BigInt)->nullable();       // bigint[] null
             $table->pgArray('supplier_ids', PgArrayType::Uuid)->default([]);       // uuid[] default '{}'::uuid[]
+            $table->pgArray('batch_ids', PgArrayType::Ulid)->nullable();           // char(26)[] null
 
             // Type modifiers
             $table->pgArray('skus', PgArrayType::Varchar)->length(32);             // varchar(32)[]
@@ -133,6 +135,7 @@ return new class extends Migration
 Rules:
 
 - Modifiers are validated **immediately** and throw `AndreaColzani\PgArray\Exceptions\InvalidDefinitionException` when the type does not support them (e.g. `length()` on `Integer`) or the values are invalid (scale greater than precision, time precision above 6, vector dimensions above 16000, unknown PostGIS subtype, …).
+- `Char` without `length()` is PostgreSQL's `char` = `character(1)`: always set a length. `Varchar` without `length()` has no limit.
 - `geography` with a subtype but no SRID defaults to SRID 4326. A SRID without a subtype uses the generic `Geometry` subtype.
 - `dimensions()` only affects the declared type: **PostgreSQL does not enforce the number of dimensions**, and introspects `integer[][]` as `integer[]`.
 - `nullable()` concerns the **column**, `withoutNullElements()` concerns the **elements**. `withoutNullElements()` only works on one-dimensional arrays and cannot be combined with `change()` (add the constraint in a separate statement).
@@ -1058,7 +1061,7 @@ Classes marked `@internal` (`Casts\PgArray`, everything in `Casts\Values`, `Supp
 - Using Laravel's `array` / `json` / `AsCollection` casts on a `text[]` column → use `AsStringArray` (or another array cast).
 - Appending with `$model->tags[] = 'x'` on an array container → assign a new array, use a Collection container, or `pgArrayAppend()`.
 - `AsPgArray::encrypted(...)` / `AsHashedArray` on a non-text column → the column must be `text[]`.
-- `AsUlidArray` on a `uuid[]` column → ULIDs are 26-character strings: use `char(26)[]` / `text[]` (or store them as UUIDs with `AsUuidArray`).
+- `AsUlidArray` on a `uuid[]` column → ULIDs are 26-character strings: create the column with `PgArrayType::Ulid` (`char(26)[]`), or store them as UUIDs with `AsUuidArray`.
 - Treating `AsDecimalArray` values as floats → they are strings on purpose.
 - Assigning a `list<float>` as a vector → wrap it in `new Vector([...])`.
 - Swapping latitude/longitude in `Point` → use named arguments.

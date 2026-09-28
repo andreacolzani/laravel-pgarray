@@ -49,6 +49,20 @@ enum PgArrayType: string
 
     case Vector = 'vector';
 
+    /** Not a PostgreSQL type: ULIDs are stored as char(26), like Laravel's ulid() columns. */
+    case Ulid = 'ulid';
+
+    /**
+     * The SQL element type, without type modifiers.
+     */
+    public function sql(): string
+    {
+        return match ($this) {
+            self::Ulid => 'char(26)',
+            default => $this->value,
+        };
+    }
+
     /**
      * The array delimiter of the type (pg_type.typdelim): ':' for PostGIS
      * geometry and geography, ',' for every other type.
