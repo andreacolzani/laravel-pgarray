@@ -642,7 +642,7 @@ final class MoneySerializer implements PgArrayValueSerializer
 Map classes to serializers in one of three ways (highest precedence first):
 
 ```php
-// 1. config/pgarray.php (publish: php artisan vendor:publish --tag="laravel-pgarray-config")
+// 1. config/pgarray.php (publish: php artisan vendor:publish --tag="pgarray-config")
 return [
     'serializers' => [
         Money\Money::class => App\Serializers\MoneySerializer::class,
