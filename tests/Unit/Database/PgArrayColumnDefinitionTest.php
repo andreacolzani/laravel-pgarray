@@ -30,7 +30,7 @@ function pgArrayDefaultSql(PgArrayColumnDefinition $column): string
 
 it('renders the array type of a PgArrayType', function (PgArrayType $type): void {
     expect(pgArrayColumn($type)->toArraySql())->toBe($type->value.'[]');
-})->with(PgArrayType::cases());
+})->with(array_values(array_filter(PgArrayType::cases(), fn (PgArrayType $type): bool => $type !== PgArrayType::Ulid)));
 
 it('renders chained type modifiers', function (Closure $column, string $sql): void {
     expect($column()->toArraySql())->toBe($sql);
@@ -52,6 +52,7 @@ it('renders chained type modifiers', function (Closure $column, string $sql): vo
     'geography default srid' => [fn () => pgArrayColumn(PgArrayType::Geography)->subtype('Point'), 'geography(Point,4326)[]'],
     'geography custom srid' => [fn () => pgArrayColumn(PgArrayType::Geography)->subtype('Point')->srid(4269), 'geography(Point,4269)[]'],
     'geography srid only' => [fn () => pgArrayColumn(PgArrayType::Geography)->srid(4326), 'geography(Geometry,4326)[]'],
+    'ulid' => [fn () => pgArrayColumn(PgArrayType::Ulid), 'char(26)[]'],
     'two dimensions' => [fn () => pgArrayColumn(PgArrayType::Integer)->dimensions(2), 'integer[][]'],
     'modifiers and dimensions' => [fn () => pgArrayColumn(PgArrayType::Varchar)->dimensions(3)->length(10), 'varchar(10)[][][]'],
 ]);
@@ -81,6 +82,7 @@ it('rejects modifiers not supported by the type', function (Closure $modifier, s
     expect($modifier)->toThrow(InvalidDefinitionException::class, $message);
 })->with([
     'length' => [fn () => pgArrayColumn(PgArrayType::Text)->length(5), 'length() is only supported by char, varchar, [text] given.'],
+    'ulid length' => [fn () => pgArrayColumn(PgArrayType::Ulid)->length(30), 'length() is only supported by char, varchar, [ulid] given.'],
     'precision' => [fn () => pgArrayColumn(PgArrayType::Integer)->precision(5), 'precision() is only supported by decimal, numeric, time, timetz, timestamp, timestamptz, [integer] given.'],
     'temporal scale' => [fn () => pgArrayColumn(PgArrayType::Timestamp)->precision(3, 2), 'A scale is only supported by decimal and numeric, [timestamp] given.'],
     'size' => [fn () => pgArrayColumn(PgArrayType::Real)->size(3), 'size() is only supported by vector, [real] given.'],

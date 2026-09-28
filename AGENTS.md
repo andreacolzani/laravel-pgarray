@@ -52,9 +52,9 @@ PHP element conversion   →  Enums\PgArrayCast       (Eloquent casts)
 PHP container            →  Enums\PgArrayContainer  (Array | Collection)
 ```
 
-- `PgArrayType` is the database level (`Char`, `Varchar`, `Text`, `SmallInt`, `Integer`, `BigInt`, `Real`, `DoublePrecision`, `Decimal`, `Numeric`, `Boolean`, `Date`, `Time`, `TimeTz`, `Timestamp`, `TimestampTz`, `Bytea`, `Uuid`, `Inet`, `MacAddr`, `Json`, `Jsonb`, `Geometry`, `Geography`, `Vector`). Do not add Laravel casts to it.
+- `PgArrayType` is the database level (`Char`, `Varchar`, `Text`, `SmallInt`, `Integer`, `BigInt`, `Real`, `DoublePrecision`, `Decimal`, `Numeric`, `Boolean`, `Date`, `Time`, `TimeTz`, `Timestamp`, `TimestampTz`, `Bytea`, `Uuid`, `Inet`, `MacAddr`, `Json`, `Jsonb`, `Geometry`, `Geography`, `Vector`, `Ulid`). Do not add Laravel casts to it. The only exception is `Ulid`, a shortcut for `char(26)` (like Laravel's `ulid()` columns) that accepts no modifiers: SQL is always rendered through `PgArrayType::sql()`, never `->value`.
 - `PgArrayCast` is the PHP side (`Boolean`, `Date`, `DateTime`, `ImmutableDate`, `ImmutableDateTime`, `Decimal`, `Double`, `Float`, `Integer`, `Real`, `String`, `Stringable`, `Hashed`, `Bytea`, `Inet`, `MacAddr`, `Vector`, `Geometry`, `Geography`, `Uri`, `Uuid`, `Ulid`).
-- Never assume `PgArrayCast == PgArrayType`: e.g. `PgArrayCast::Ulid` has no PostgreSQL type (ULIDs are stored as `char(26)` / `text`), and `char`, `varchar`, `text`, `time`, `timetz` all use `StringCaster`.
+- Never assume `PgArrayCast == PgArrayType`: e.g. `PgArrayCast::Ulid` has no PostgreSQL type (`PgArrayType::Ulid` renders `char(26)`, `text[]` works too), and `char`, `varchar`, `text`, `time`, `timetz` all use `StringCaster`.
 - `PgArrayContainer` has only `Array` (default) and `Collection`.
 
 ### Cast pipeline

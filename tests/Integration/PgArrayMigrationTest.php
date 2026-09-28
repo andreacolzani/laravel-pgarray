@@ -60,6 +60,7 @@ it('creates array columns', function (Closure $column, string $type): void {
     'jsonb' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Jsonb), 'jsonb[]'],
     'inet' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Inet), 'inet[]'],
     'bytea' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Bytea), 'bytea[]'],
+    'ulid' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Ulid), 'character(26)[]'],
     'char(2)' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Char)->length(2), 'character(2)[]'],
     'varchar(50)' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Varchar)->length(50), 'character varying(50)[]'],
     'decimal(10,2)' => [fn (Blueprint $table) => $table->pgArray('value', PgArrayType::Decimal)->precision(10, 2), 'numeric(10,2)[]'],

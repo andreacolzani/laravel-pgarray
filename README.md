@@ -95,7 +95,7 @@ Pick the cast that matches the type of the elements. All casts live in the `Andr
 | `AsDateArray`, `AsImmutableDateArray` | Carbon | `date[]` |
 | `AsDateTimeArray`, `AsImmutableDateTimeArray` | Carbon | `timestamp[]`, `timestamptz[]` |
 | `AsUuidArray` | `Ramsey\Uuid\UuidInterface` | `uuid[]` |
-| `AsUlidArray` | `Symfony\Component\Uid\Ulid` | `text[]` |
+| `AsUlidArray` | `Symfony\Component\Uid\Ulid` | `char(26)[]`, `text[]` |
 | `AsStringableArray` | `Illuminate\Support\Stringable` | `text[]` |
 | `AsUriArray` | `Illuminate\Support\Uri` | `text[]` |
 
@@ -259,6 +259,7 @@ $table->pgArray('prices', PgArrayType::Decimal)->precision(10, 2);   // decimal(
 $table->pgArray('embeddings', PgArrayType::Vector)->size(1536);      // vector(1536)[]
 $table->pgArray('places', PgArrayType::Geography)->subtype('Point'); // geography(Point,4326)[]
 $table->pgArray('matrix', PgArrayType::Integer)->dimensions(2);      // integer[][]
+$table->pgArray('ulids', PgArrayType::Ulid);                         // char(26)[]
 ```
 
 Defaults can be written as plain PHP arrays, like `->default(['draft'])`. If an array must never contain `NULL` elements, `->withoutNullElements()` adds a check constraint for you.

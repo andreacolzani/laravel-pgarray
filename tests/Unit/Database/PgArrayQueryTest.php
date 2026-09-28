@@ -78,6 +78,7 @@ it('casts values to the given type', function (PgArrayType|PgArrayTypeDefinition
 })->with([
     'type' => [PgArrayType::BigInt, '::bigint[]'],
     'type definition' => [PgArrayTypeDefinition::varchar(50), '::varchar(50)[]'],
+    'ulid' => [PgArrayType::Ulid, '::char(26)[]'],
 ]);
 
 it('wraps qualified and expression columns', function (): void {

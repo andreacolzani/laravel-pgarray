@@ -22,6 +22,7 @@ use AndreaColzani\PgArray\Casts\AsMacAddrArray;
 use AndreaColzani\PgArray\Casts\AsPgArray;
 use AndreaColzani\PgArray\Casts\AsRealArray;
 use AndreaColzani\PgArray\Casts\AsStringArray;
+use AndreaColzani\PgArray\Casts\AsUlidArray;
 use AndreaColzani\PgArray\Casts\AsUuidArray;
 use AndreaColzani\PgArray\Casts\AsVectorArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
@@ -80,6 +81,7 @@ final class PgsqlModel extends Model
             $table->pgArray('varchars', PgArrayType::Varchar)->length(20)->nullable();
             $table->pgArray('texts', PgArrayType::Text)->nullable();
             $table->pgArray('uuids', PgArrayType::Uuid)->nullable();
+            $table->pgArray('ulids', PgArrayType::Ulid)->nullable();
             $table->pgArray('dates', PgArrayType::Date)->nullable();
             $table->pgArray('times', PgArrayType::Time)->precision(6)->nullable();
             $table->pgArray('timetzs', PgArrayType::TimeTz)->nullable();
@@ -131,6 +133,7 @@ final class PgsqlModel extends Model
             'varchars' => AsStringArray::class,
             'texts' => AsStringArray::class,
             'uuids' => AsUuidArray::class,
+            'ulids' => AsUlidArray::class,
             'dates' => AsDateArray::class,
             'times' => AsStringArray::class,
             'timetzs' => AsStringArray::class,
