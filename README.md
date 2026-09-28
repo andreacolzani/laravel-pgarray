@@ -1,20 +1,16 @@
 # Laravel PostgreSQL Arrays
 
-<p>
-    <a href="https://packagist.org/packages/andreacolzani/laravel-pgarray"><img src="https://img.shields.io/packagist/v/andreacolzani/laravel-pgarray.svg?style=flat-square" alt="Latest Version on Packagist"></a>
-    <a href="https://github.com/andreacolzani/laravel-pgarray/actions?query=workflow%3Arun-tests+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andreacolzani/laravel-pgarray/run-tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
-    <a href="https://github.com/andreacolzani/laravel-pgarray/actions?query=workflow%3APHPStan+branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/andreacolzani/laravel-pgarray/phpstan.yml?branch=main&label=phpstan&style=flat-square" alt="PHPStan"></a>
-    <a href="https://packagist.org/packages/andreacolzani/laravel-pgarray"><img src="https://img.shields.io/packagist/dt/andreacolzani/laravel-pgarray.svg?style=flat-square" alt="Total Downloads"></a>
-</p>
-<p>
-    <a href="#compatibility"><img src="https://img.shields.io/badge/php-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.3+"></a>
-    <a href="#compatibility"><img src="https://img.shields.io/badge/laravel-12%20%7C%2013-FF2D20?style=flat-square&logo=laravel&logoColor=white" alt="Laravel 12 | 13"></a>
-    <a href="#compatibility"><img src="https://img.shields.io/badge/postgresql-15%2B-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL 15+"></a>
-</p>
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/andreacolzani/laravel-pgarray.svg?style=flat-square)](https://packagist.org/packages/andreacolzani/laravel-pgarray)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+[![Test Status](https://github.com/andreacolzani/laravel-pgarray/actions/workflows/run-tests.yml/badge.svg)](https://github.com/andreacolzani/laravel-pgarray/actions/workflows/run-tests.yml)
+[![Code Style Status](https://github.com/andreacolzani/laravel-pgarray/actions/workflows/fix-php-code-style-issues.yml/badge.svg)](https://github.com/andreacolzani/laravel-pgarray/actions/workflows/fix-php-code-style-issues.yml)
+[![PHPStan](https://github.com/andreacolzani/laravel-pgarray/actions/workflows/phpstan.yml/badge.svg)](https://github.com/andreacolzani/laravel-pgarray/actions/workflows/phpstan.yml)
 
-<p align="center">
-    <img src="art/cover.png" alt="Laravel PostgreSQL Arrays" width="100%">
-</p>
+[![PHP 8.3+](https://img.shields.io/badge/php-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white)](#compatibility)
+[![Laravel 12 | 13](https://img.shields.io/badge/laravel-12%20%7C%2013-FF2D20?style=flat-square&logo=laravel&logoColor=white)](#compatibility)
+[![PostgreSQL 15+](https://img.shields.io/badge/postgresql-15%2B-4169E1?style=flat-square&logo=postgresql&logoColor=white)](#compatibility)
+
+![Laravel PostgreSQL Arrays](art/cover.svg)
 
 ## Introduction
 
