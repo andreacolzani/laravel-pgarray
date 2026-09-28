@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\UuidCaster;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
 it('casts values to Uuid instances', function (mixed $value, ?string $expected): void {
     $result = (new UuidCaster)->get($value);
@@ -45,3 +47,19 @@ it('serializes Uuid values to strings', function (): void {
         ->and($caster->set(null))
         ->toBeNull();
 });
+
+it('normalizes assigned UUID strings', function (mixed $value): void {
+    expect((new UuidCaster)->set($value))
+        ->toBe('550e8400-e29b-41d4-a716-446655440000');
+})->with([
+    'uppercase' => ['550E8400-E29B-41D4-A716-446655440000'],
+    'braces' => ['{550e8400-e29b-41d4-a716-446655440000}'],
+    'symfony uuid' => [SymfonyUuid::fromString('550e8400-e29b-41d4-a716-446655440000')],
+]);
+
+it('rejects invalid UUIDs', function (mixed $value): void {
+    (new UuidCaster)->set($value);
+})->with([
+    'invalid string' => ['not-a-uuid'],
+    'integer' => [42],
+])->throws(InvalidValueException::class, 'to a UUID');

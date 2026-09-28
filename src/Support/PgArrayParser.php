@@ -25,7 +25,8 @@ final class PgArrayParser
     public const DEFAULT_DELIMITER = ',';
 
     /**
-     * Parse a PostgreSQL array representation into a PHP array.
+     * Explicit bounds ([0:1]={a,b}) are skipped: elements are always returned
+     * as lists.
      *
      * @return array<int, string|int|bool|null|array<int, mixed>>
      */
@@ -37,7 +38,10 @@ final class PgArrayParser
 
         self::ensureDelimiter($delimiter);
 
-        $position = 0;
+        // PostgreSQL prefixes arrays whose lower bound is not 1 with their bounds.
+        $position = preg_match('/^(?:\[[+-]?\d+:[+-]?\d+\])+=/', $value, $bounds) === 1
+            ? strlen($bounds[0])
+            : 0;
         $length = strlen($value);
 
         return self::parseArray($value, $position, $length, $delimiter);
@@ -214,13 +218,7 @@ final class PgArrayParser
                     return 'NULL';
                 }
 
-                $item = match (true) {
-                    is_bool($item) => $item ? 't' : 'f',
-                    is_float($item) => self::serializeFloat($item),
-                    default => (string) $item,
-                };
-
-                return self::serializeValue($item, $delimiter);
+                return self::serializeValue(self::toText($item), $delimiter);
             },
             $value,
         );
@@ -229,15 +227,18 @@ final class PgArrayParser
     }
 
     /**
-     * The shortest representation that round trips (serialize_precision = -1,
-     * as var_export()), since (string) only keeps 14 significant digits.
+     * The PostgreSQL text form of a scalar: booleans as t / f, floats with the
+     * shortest representation that round trips (var_export(), since (string)
+     * only keeps 14 significant digits) or NaN / Infinity / -Infinity.
      */
-    private static function serializeFloat(float $value): string
+    public static function toText(string|int|float|bool $value): string
     {
         return match (true) {
-            is_nan($value) => 'NaN',
-            is_infinite($value) => $value > 0 ? 'Infinity' : '-Infinity',
-            default => var_export($value, true),
+            is_bool($value) => $value ? 't' : 'f',
+            is_float($value) && is_nan($value) => 'NaN',
+            is_float($value) && is_infinite($value) => $value > 0 ? 'Infinity' : '-Infinity',
+            is_float($value) => var_export($value, true),
+            default => (string) $value,
         };
     }
 

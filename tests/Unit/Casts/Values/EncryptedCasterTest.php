@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use AndreaColzani\PgArray\Casts\Values\BooleanCaster;
+use AndreaColzani\PgArray\Casts\Values\DoubleCaster;
 use AndreaColzani\PgArray\Casts\Values\EncryptedCaster;
 use AndreaColzani\PgArray\Casts\Values\EnumCaster;
 use AndreaColzani\PgArray\Casts\Values\IntegerCaster;
@@ -52,6 +53,8 @@ it('round-trips values through the element caster', function (PgArrayValueCaster
     'integer' => [new IntegerCaster, 42],
     'true' => [new BooleanCaster, true],
     'false' => [new BooleanCaster, false],
+    'float' => [new DoubleCaster, 0.1 + 0.2],
+    'infinity' => [new DoubleCaster, -INF],
     'backed enum' => [new EnumCaster(Status::class), Status::Active],
     'JSON object' => [new JsonObjectCaster(Address::class), new Address('Via Roma 1', 'Milano')],
 ]);
@@ -128,4 +131,12 @@ it('decrypts elements encrypted with a previous key', function (): void {
 
     expect((new EncryptedCaster(new StringCaster))->get($previous->encryptString('secret')))
         ->toBe('secret');
+});
+
+it('encrypts floats without losing precision', function (): void {
+    $caster = new EncryptedCaster(new DoubleCaster);
+
+    expect(Crypt::decryptString($caster->set(M_PI)))->toBe('3.141592653589793')
+        ->and(Crypt::decryptString($caster->set(INF)))->toBe('Infinity')
+        ->and($caster->get($caster->set(NAN)))->toBeNan();
 });

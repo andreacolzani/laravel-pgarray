@@ -57,6 +57,14 @@ describe('parse', function () {
                 ['baz', 'qux'],
             ]);
     });
+
+    it('skips explicit bounds', function (string $value, array $expected) {
+        expect(PgArrayParser::parse($value))->toBe($expected);
+    })->with([
+        'lower bound 0' => ['[0:2]={9,1,2}', ['9', '1', '2']],
+        'negative lower bound' => ['[-1:0]={a,b}', ['a', 'b']],
+        'multidimensional' => ['[1:1][2:3]={{1,2}}', [['1', '2']]],
+    ]);
 });
 
 describe('serialize', function () {
@@ -153,4 +161,6 @@ it('rejects malformed array representations', function (string $value, string $m
     'unterminated' => ['{a,b', 'Unterminated PostgreSQL array representation.'],
     'unterminated quoted value' => ['{"a', 'Unterminated quoted value in PostgreSQL array.'],
     'garbage after a quoted value' => ['{"a"b}', 'Invalid PostgreSQL array representation.'],
+    'bounds without an array' => ['[0:1]=', 'Invalid PostgreSQL array representation.'],
+    'malformed bounds' => ['[0:1]{a,b}', 'Invalid PostgreSQL array representation.'],
 ])->throws(InvalidValueException::class);
