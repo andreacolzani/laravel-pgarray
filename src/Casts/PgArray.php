@@ -9,6 +9,7 @@ use AndreaColzani\PgArray\Casts\Values\PgArrayValueCaster;
 use AndreaColzani\PgArray\Casts\Values\PgArrayValueCasterResolver;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Support\PgArrayParser;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
@@ -63,14 +64,28 @@ final class PgArray implements CastsAttributes
             return null;
         }
 
-        $values = $value instanceof Collection
-            ? $value->all()
-            : $value;
-
         return PgArrayParser::serialize(
-            $this->castToDatabase($values),
+            $this->castToDatabase($this->toArray($key, $value)),
             $this->delimiter,
         );
+    }
+
+    /**
+     * Eloquent passes any assigned value, whatever the declared cast type.
+     *
+     * @return array<int, mixed>
+     */
+    private function toArray(string $key, mixed $value): array
+    {
+        return match (true) {
+            $value instanceof Collection => $value->all(),
+            is_array($value) => $value,
+            default => throw new InvalidValueException(sprintf(
+                'The [%s] attribute must be an array, a Collection or null, [%s] given.',
+                $key,
+                get_debug_type($value),
+            )),
+        };
     }
 
     /**

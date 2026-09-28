@@ -314,6 +314,8 @@ $product->tags = ['NULL', '', 'a,b', 'say "hi"', 'back\\slash', 'ünïcødé'];
 
 - `NULL` column ↔ `null`; empty array `{}` ↔ `[]`; `NULL` elements ↔ `null` elements.
 - Quoting and escaping are handled for any character.
+- Only arrays, Collections and `null` can be assigned: other values (e.g. a raw `'{a,b}'` literal) throw `InvalidValueException`.
+- Arrays whose lower bound is not 1 (e.g. after `UPDATE … SET tags[0] = …`, which PostgreSQL returns as `[0:2]={…}`) are read as plain lists.
 - Dirty checking works on the serialized value: assigning the same values does not make the attribute dirty.
 
 ### Mutating values in place
@@ -364,6 +366,10 @@ PostgreSQL requires **rectangular** arrays: all sub-arrays at the same level mus
 - `AsFloatArray` / `AsDoubleArray` / `AsRealArray` return floats. Floats are written with the shortest representation that round trips (`0.1 + 0.2` → `0.30000000000000004`). `NAN`, `INF`, `-INF` are written as `NaN`, `Infinity`, `-Infinity` and read back as the PHP constants.
 - `real` is single precision in PostgreSQL: values read back may differ slightly from what was assigned. Prefer `double precision` unless storage matters.
 - `AsIntegerArray` casts with `(int)`.
+
+### UUIDs and ULIDs
+
+`AsUuidArray` and `AsUlidArray` accept objects and strings, validate them on assignment (`InvalidValueException`) and store them normalized: UUIDs in lowercase, ULIDs in uppercase. ULIDs have no PostgreSQL type, so this validation is the only one they get.
 
 ### Booleans
 
@@ -1022,7 +1028,7 @@ Every package exception implements `AndreaColzani\PgArray\Exceptions\PgArrayExce
 |---|---|---|
 | `UnsupportedElementException` | `InvalidArgumentException` | element type cannot be resolved (unknown class, pure enum, unsupported class, invalid serializer) |
 | `InvalidDefinitionException` | `InvalidArgumentException` | invalid cast arguments, migration type/column modifiers, delimiters |
-| `InvalidValueException` | `UnexpectedValueException` | a value cannot be cast, serialized or parsed (invalid enum value, IP, MAC, vector, point, malformed array literal, `null` query value, …) |
+| `InvalidValueException` | `UnexpectedValueException` | a value cannot be cast, serialized or parsed (invalid enum value, UUID, ULID, IP, MAC, vector, point, malformed array literal, non-array assignment, `null` query value, …) |
 | `UnsupportedDriverException` | `RuntimeException` | migration helper or query macros used with a non-PostgreSQL connection |
 
 ```php

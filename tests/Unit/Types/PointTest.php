@@ -66,6 +66,11 @@ it('parses WKT and EWKT points', function (string $wkt, Point $expected): void {
     'exponent' => ['POINT(1e-7 2.5E+1)', new Point(25, 1.0E-7, 0)],
 ]);
 
+it('serializes coordinates without losing precision', function (): void {
+    expect((new Point(51.50721234567891, 0.00001))->toPgArrayValue())
+        ->toBe('SRID=4326;POINT(1.0e-5 51.50721234567891)');
+});
+
 it('round trips through EWKT', function (): void {
     $point = new Point(45.46420001, 9.18999999, 3857);
 

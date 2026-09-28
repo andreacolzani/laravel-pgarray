@@ -64,7 +64,7 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
      */
     public function toPgArrayValue(): string
     {
-        $wkt = 'POINT('.$this->longitude.' '.$this->latitude.')';
+        $wkt = 'POINT('.self::coordinate($this->longitude).' '.self::coordinate($this->latitude).')';
 
         return $this->srid === 0
             ? $wkt
@@ -108,6 +108,15 @@ final class Point implements JsonSerializable, PgArrayDelimited, PgArrayValue
             'type' => 'Point',
             'coordinates' => [$this->longitude, $this->latitude],
         ];
+    }
+
+    /**
+     * The shortest representation that round trips: (string) only keeps 14
+     * significant digits.
+     */
+    private static function coordinate(float $value): string
+    {
+        return json_encode($value, JSON_THROW_ON_ERROR);
     }
 
     private static function fromEwkb(string $wkb): self

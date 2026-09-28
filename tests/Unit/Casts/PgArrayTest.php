@@ -5,6 +5,7 @@ declare(strict_types=1);
 use AndreaColzani\PgArray\Casts\PgArray;
 use AndreaColzani\PgArray\Enums\PgArrayCast;
 use AndreaColzani\PgArray\Enums\PgArrayContainer;
+use AndreaColzani\PgArray\Exceptions\InvalidValueException;
 use AndreaColzani\PgArray\Exceptions\UnsupportedElementException;
 use AndreaColzani\PgArray\Tests\Fixtures\Address;
 use AndreaColzani\PgArray\Tests\Fixtures\Cents;
@@ -247,6 +248,12 @@ it('serializes null values', function (): void {
         [],
     ))->toBe('{1,NULL,3}');
 });
+
+it('rejects assigned values that are not arrays', function (mixed $value): void {
+    (new PgArray(type: PgArrayCast::Integer, container: PgArrayContainer::Array))
+        ->set(new TestModel, 'numbers', $value, []);
+})->with(['{1,2}', 5, new ArrayObject([1])])
+    ->throws(InvalidValueException::class, 'The [numbers] attribute must be an array, a Collection or null');
 
 it('fails explicitly when the element type cannot be resolved', function (): void {
     new PgArray(

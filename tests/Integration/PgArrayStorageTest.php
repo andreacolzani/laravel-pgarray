@@ -238,6 +238,15 @@ describe('structure', function (): void {
             ->and($fresh?->text_matrix)->toBe([['a', 'b "c"'], ['{d}', null]]);
     });
 
+    it('reads arrays whose lower bound is not 1', function (): void {
+        $model = PgsqlModel::query()->create(['integers' => [1, 2]]);
+
+        pgsql()->statement('update '.PgsqlModel::TABLE.' set integers[0] = 9 where id = ?', [$model->getKey()]);
+
+        expect(pgsqlRaw($model, 'integers'))->toBe('[0:2]={9,1,2}')
+            ->and($model->fresh()?->integers)->toBe([9, 1, 2]);
+    });
+
     it('rejects ragged multidimensional arrays', function (): void {
         PgsqlModel::query()->create(['matrix' => [[1, 2], [3]]]);
     })->throws(QueryException::class);
